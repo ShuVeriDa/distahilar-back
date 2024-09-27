@@ -18,15 +18,260 @@ model User {
   bio      String?
   email    String
   phone    String
-  imageUrl String  @db.Text
+  imageUrl String? @db.Text
 
-  // servers  Server[]
-  // members  Member[]
-  // channels Channel[]
+  chats    ChatMember[]
+  settings UserSettings?
+
+  messages      Message[]
+  reactions     Reaction[]
+  folders       Folder[]
+  notifications Notification[]
+  AuditLog      AuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // friendSender   Friend[] @relation("senderId")
-  // friendReceived Friend[] @relation("recipientId")
+  @@map("users")
+}
+
+// Настройки пользователя
+model UserSettings {
+  id            String   @id @default(uuid())
+  notifications Boolean  @default(true)
+  language      Language @default(RU)
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+enum Language {
+  EN
+  RU
+  CHE
+}
+
+model Chat {
+  id          String   @id @default(uuid())
+  name        String
+  imageUrl    String?  @db.Text
+  description String?
+  link        String   @unique
+  type        ChatRole @default(DIALOG)
+
+  messages      Message[]
+  members       ChatMember[]
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  folderId String?
+  folder   Folder?    @relation(fields: [folderId], references: [id])
+  auditLog AuditLog[]
+
+  @@index([type, createdAt])
+  @@map("chats")
+}
+
+// Участник чата с ролями
+model ChatMember {
+  id       String   @id @default(uuid())
+  joinedAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  chatId String
+  chat   Chat   @relation(fields: [chatId], references: [id])
+
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, chatId])
+  @@map("chat_members")
+}
+
+// Роли
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  permissions Permission[]
+  chatMembers ChatMember[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id     String @id @default(uuid())
+  action String
+  roles  Role[]
+
+  @@map("permissions")
+}
+
+// Сообщения
+model Message {
+  id          String      @id @default(uuid())
+  content     String?
+  messageType MessageType
+  createdAt   DateTime    @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  chatId String
+  chat   Chat   @relation(fields: [chatId], references: [id])
+
+  mediaId String?
+  media   Media?  @relation(fields: [mediaId], references: [id])
+
+  reactions     Reaction[]
+  voiceMessages VoiceMessage[]
+  videoMessages VideoMessage[]
+  fileMessages  FileMessage[]
+  notifications Notification[]
+
+  @@index([chatId, createdAt])
+  @@map("messages")
+}
+
+// Медиафайлы
+model Media {
+  id        String    @id @default(uuid())
+  url       String
+  type      MediaType
+  createdAt DateTime  @default(now())
+  messages  Message[]
+
+  @@map("media")
+}
+
+// Голосовые сообщения
+model VoiceMessage {
+  id        String   @id @default(uuid())
+  url       String
+  duration  Int
+  createdAt DateTime @default(now())
+
+  messageId String?
+  message   Message? @relation(fields: [messageId], references: [id])
+
+  @@map("voice_messages")
+}
+
+// Видеосообщения
+model VideoMessage {
+  id        String   @id @default(uuid())
+  url       String
+  duration  Int
+  createdAt DateTime @default(now())
+
+  messageId String?
+  message   Message? @relation(fields: [messageId], references: [id])
+
+  @@map("video_messages")
+}
+
+// Файлы
+model FileMessage {
+  id        String   @id @default(uuid())
+  url       String
+  fileName  String
+  fileSize  Int
+  createdAt DateTime @default(now())
+
+  messageId String?
+  message   Message? @relation(fields: [messageId], references: [id])
+
+  @@map("file_messages")
+}
+
+// Реакции на сообщения
+model Reaction {
+  id    String @id @default(uuid())
+  emoji String
+
+  messageId String
+  message   Message @relation(fields: [messageId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([messageId, userId, emoji])
+  @@map("reactions")
+}
+
+// Папки для чатов
+model Folder {
+  id    String @id @default(uuid())
+  name  String
+  chats Chat[]
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("folders")
+}
+
+// Уведомления
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  messageId String?
+  message   Message? @relation(fields: [messageId], references: [id])
+
+  chatId String?
+  chat   Chat?   @relation(fields: [chatId], references: [id])
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  MESSAGE
+  MENTION
+  INVITATION
+}
+
+// Аудит логов
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  timestamp DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  chatId String
+  chat   Chat   @relation(fields: [chatId], references: [id])
+
+  @@map("audit_logs")
+}
+
+enum MediaType {
+  Image
+  Video
+  Voice
+  File
+}
+
+enum MessageType {
+  Text
+  Voice
+  Video
+  File
+}
+
+enum ChatRole {
+  DIALOG
+  CHANNEL
+  GROUP
 }
