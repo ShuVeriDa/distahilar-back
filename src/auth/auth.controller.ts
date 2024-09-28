@@ -7,6 +7,11 @@ import {
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { LoginDto } from 'src/user/dto/login.dto';
@@ -22,6 +27,8 @@ export class AuthController {
 
   @HttpCode(200)
   @Post('login')
+  @ApiNotFoundResponse({ description: 'The user not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid password' })
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
@@ -35,6 +42,9 @@ export class AuthController {
 
   @HttpCode(200)
   @Post('register')
+  @ApiBadRequestResponse({
+    description: 'User with this username already exists',
+  })
   async register(
     @Body() dto: CreateUserDto,
     @Res({ passthrough: true }) res: Response,

@@ -32,7 +32,8 @@ export class AuthService {
   async register(dto: CreateUserDto) {
     const oldUser = await this.userService.getByUserName(dto.username);
 
-    if (oldUser) throw new BadRequestException('User already exists');
+    if (oldUser)
+      throw new BadRequestException('User with this username already exists');
 
     const { password: _, ...user } = await this.userService.create(dto);
 
@@ -45,11 +46,6 @@ export class AuthService {
   }
 
   private async issueTokens(userId: string) {
-    console.log(
-      process.env.ACCESS_TOKEN_EXPIRES_IN,
-      process.env.REFRESH_TOKEN_EXPIRES_IN,
-    );
-
     const data = { id: userId };
 
     const accessToken = this.jwt.sign(data, {
@@ -64,11 +60,6 @@ export class AuthService {
   }
 
   addRefreshTokenResponse(res: Response, refreshToken: string) {
-    console.log(
-      process.env.REFRESH_TOKEN_NAME,
-      Number(process.env.EXPIRE_DAY_REFRESH_TOKEN),
-    );
-
     const expiresIn = new Date();
     expiresIn.setDate(
       expiresIn.getDate() + Number(process.env.EXPIRE_DAY_REFRESH_TOKEN),
@@ -90,7 +81,7 @@ export class AuthService {
   private async validateUser(dto: LoginDto) {
     const user = await this.userService.getByUserName(dto.username);
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('The user not found');
 
     const isValid = await verify(user.password, dto.password);
 

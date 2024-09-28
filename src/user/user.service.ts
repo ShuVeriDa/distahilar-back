@@ -88,7 +88,7 @@ export class UserService {
       where: { id: user.id },
     });
 
-    return 'The user has been deleted';
+    return 'The user has been deleted successfully';
   }
 
   async validateUser(userId: string) {
@@ -96,7 +96,7 @@ export class UserService {
       where: { id: userId },
     });
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('The user not found');
 
     return user;
   }
