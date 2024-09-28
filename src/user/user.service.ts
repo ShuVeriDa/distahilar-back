@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Language, Prisma } from '@prisma/client';
 import { hash } from 'argon2';
 import { PrismaService } from 'src/prisma.service';
+import { ChangeSettingsDto } from './dto/change-settings.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
@@ -47,5 +48,56 @@ export class UserService {
     return this.prisma.user.create({
       data: user,
     });
+  }
+
+  async changeSettings(userId: string, dto: ChangeSettingsDto) {
+    const user = await this.validateUser(userId);
+
+    const userSettings = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        settings: {
+          update: {
+            data: {
+              language: dto.language.toUpperCase() as Language,
+              notifications: dto.notifications,
+            },
+          },
+        },
+      },
+      include: {
+        settings: {
+          select: {
+            id: true,
+            language: true,
+            notifications: true,
+          },
+        },
+      },
+    });
+
+    const { password, ...rest } = userSettings;
+
+    return rest;
+  }
+
+  async deleteUser(userId: string) {
+    const user = await this.validateUser(userId);
+
+    await this.prisma.user.delete({
+      where: { id: user.id },
+    });
+
+    return 'The user has been deleted';
+  }
+
+  async validateUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return user;
   }
 }
