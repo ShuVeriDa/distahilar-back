@@ -69,7 +69,7 @@ model Chat {
   updatedAt DateTime @updatedAt
 
   folderId String?
-  folder   Folder?    @relation(fields: [folderId], references: [id])
+  folder   Folder?    @relation(fields: [folderId], references: [id], onDelete: Cascade)
   auditLog AuditLog[]
 
   @@index([type, createdAt])
@@ -81,13 +81,14 @@ model ChatMember {
   id   String     @id @default(uuid())
   role MemberRole @default(GUEST)
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   chatId String
-  chat   Chat   @relation(fields: [chatId], references: [id])
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
-  joinedAt DateTime @default(now())
+  joinedAt  DateTime  @default(now())
+  deletedAt DateTime?
 
   @@unique([userId, chatId])
   @@map("chat_members")
@@ -107,13 +108,13 @@ model Message {
   createdAt   DateTime    @default(now())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   chatId String
-  chat   Chat   @relation(fields: [chatId], references: [id])
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   mediaId String?
-  media   Media?  @relation(fields: [mediaId], references: [id])
+  media   Media?  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
 
   reactions     Reaction[]
   voiceMessages VoiceMessage[]
@@ -144,7 +145,7 @@ model VoiceMessage {
   createdAt DateTime @default(now())
 
   messageId String?
-  message   Message? @relation(fields: [messageId], references: [id])
+  message   Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@map("voice_messages")
 }
@@ -157,7 +158,7 @@ model VideoMessage {
   createdAt DateTime @default(now())
 
   messageId String?
-  message   Message? @relation(fields: [messageId], references: [id])
+  message   Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@map("video_messages")
 }
@@ -171,7 +172,7 @@ model VideoMessage {
 //   createdAt DateTime @default(now())
 
 //   messageId String?
-//   message   Message? @relation(fields: [messageId], references: [id])
+//   message   Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
 //   @@map("file_messages")
 // }
@@ -182,10 +183,10 @@ model Reaction {
   emoji String
 
   messageId String
-  message   Message @relation(fields: [messageId], references: [id])
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId, emoji])
   @@map("reactions")
@@ -198,7 +199,7 @@ model Folder {
   chats Chat[]
 
   userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("folders")
 }
@@ -211,13 +212,13 @@ model Notification {
   createdAt DateTime         @default(now())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   messageId String?
-  message   Message? @relation(fields: [messageId], references: [id])
+  message   Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   chatId String?
-  chat   Chat?   @relation(fields: [chatId], references: [id])
+  chat   Chat?   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
 }
@@ -235,10 +236,10 @@ model AuditLog {
   timestamp DateTime @default(now())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   chatId String
-  chat   Chat   @relation(fields: [chatId], references: [id])
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   @@map("audit_logs")
 }
