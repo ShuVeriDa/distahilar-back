@@ -46,63 +46,61 @@ export class ChatService {
   }
 
   async createChat(dto: CreateChatDto, userId: string) {
-    if (dto.type === ChatRole.DIALOG) {
-      const chat = await this.prisma.chat.findFirst({
-        where: {
-          AND: [
-            {
-              members: {
-                some: {
-                  user: {
-                    username: dto.username,
-                  },
+    const chat = await this.prisma.chat.findFirst({
+      where: {
+        AND: [
+          {
+            members: {
+              some: {
+                user: {
+                  username: dto.username,
                 },
               },
             },
-            {
-              members: {
-                some: {
-                  user: {
-                    id: userId,
-                  },
+          },
+          {
+            members: {
+              some: {
+                user: {
+                  id: userId,
                 },
               },
             },
-          ],
-        },
-        include: {
-          members: true,
-        },
-      });
-
-      if (chat) throw new ForbiddenException('Chat already exists');
-      const user = await this.userService.getById(userId);
-
-      const member = await this.userService.getByUserName(dto.username);
-      if (!member) throw new NotFoundException('User not found');
-
-      const chatName = `${user.username}-${member.username}`;
-
-      return this.prisma.chat.create({
-        data: {
-          name: chatName,
-          type: dto.type,
-          link: uuidv4(),
-          folder: {
-            connect: {
-              userId: userId,
-            },
           },
-          members: {
-            create: [{ userId: userId }, { userId: member.id }],
+        ],
+      },
+      include: {
+        members: true,
+      },
+    });
+
+    if (chat) throw new ForbiddenException('Chat already exists');
+    const user = await this.userService.getById(userId);
+
+    const member = await this.userService.getByUserName(dto.username);
+    if (!member) throw new NotFoundException('User not found');
+
+    const chatName = `${user.username}-${member.username}`;
+
+    return this.prisma.chat.create({
+      data: {
+        name: chatName,
+        type: ChatRole.DIALOG,
+        link: uuidv4(),
+        folder: {
+          connect: {
+            userId: userId,
           },
         },
-        include: {
-          members: true,
-          messages: true,
+        members: {
+          create: [{ userId: userId }, { userId: member.id }],
         },
-      });
-    }
+      },
+      include: {
+        members: true,
+        messages: true,
+      },
+    });
 
     // if (dto.type === ChatRole.GROUP) {
     //   return await this.prisma.chat.create({

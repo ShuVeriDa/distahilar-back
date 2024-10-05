@@ -1,20 +1,13 @@
-import { ChatRole } from '@prisma/client';
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Matches,
-  MinLength,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateChatDto {
-  @Matches(
-    `^${Object.values(ChatRole)
-      .filter((v) => typeof v !== 'number')
-      .join('|')}$`,
-    'i',
-  )
-  type: ChatRole;
+  // @Matches(
+  //   `^${Object.values(ChatRole)
+  //     .filter((v) => typeof v !== 'number')
+  //     .join('|')}$`,
+  //   'i',
+  // )
+  // type: ChatRole;
 
   @IsOptional()
   @IsString()
