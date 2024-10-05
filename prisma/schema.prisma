@@ -78,8 +78,8 @@ model Chat {
 
 // Участник чата с ролями
 model ChatMember {
-  id       String   @id @default(uuid())
-  joinedAt DateTime @default(now())
+  id   String     @id @default(uuid())
+  role MemberRole @default(GUEST)
 
   userId String
   user   User   @relation(fields: [userId], references: [id])
@@ -87,29 +87,16 @@ model ChatMember {
   chatId String
   chat   Chat   @relation(fields: [chatId], references: [id])
 
-  roleId String
-  role   Role   @relation(fields: [roleId], references: [id])
+  joinedAt DateTime @default(now())
 
   @@unique([userId, chatId])
   @@map("chat_members")
 }
 
-// Роли
-model Role {
-  id          String       @id @default(uuid())
-  name        String       @unique
-  permissions Permission[]
-  chatMembers ChatMember[]
-
-  @@map("roles")
-}
-
-model Permission {
-  id     String @id @default(uuid())
-  action String
-  roles  Role[]
-
-  @@map("permissions")
+enum MemberRole {
+  ADMIN
+  MODERATOR
+  GUEST
 }
 
 // Сообщения
@@ -131,7 +118,7 @@ model Message {
   reactions     Reaction[]
   voiceMessages VoiceMessage[]
   videoMessages VideoMessage[]
-  fileMessages  FileMessage[]
+  fileUrl       String?        @db.Text
   notifications Notification[]
 
   @@index([chatId, createdAt])
@@ -176,18 +163,18 @@ model VideoMessage {
 }
 
 // Файлы
-model FileMessage {
-  id        String   @id @default(uuid())
-  url       String
-  fileName  String
-  fileSize  Int
-  createdAt DateTime @default(now())
+// model FileMessage {
+//   id        String   @id @default(uuid())
+//   url       String
+//   fileName  String
+//   fileSize  Int
+//   createdAt DateTime @default(now())
 
-  messageId String?
-  message   Message? @relation(fields: [messageId], references: [id])
+//   messageId String?
+//   message   Message? @relation(fields: [messageId], references: [id])
 
-  @@map("file_messages")
-}
+//   @@map("file_messages")
+// }
 
 // Реакции на сообщения
 model Reaction {
@@ -210,7 +197,7 @@ model Folder {
   name  String
   chats Chat[]
 
-  userId String
+  userId String @unique
   user   User   @relation(fields: [userId], references: [id])
 
   @@map("folders")

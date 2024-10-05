@@ -43,6 +43,13 @@ export class UserService {
           language: Language.EN,
         },
       },
+      folders: {
+        create: [
+          {
+            name: 'All chats',
+          },
+        ],
+      },
     } as Prisma.UserCreateInput;
 
     return this.prisma.user.create({
