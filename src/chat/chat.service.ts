@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ChatRole } from '@prisma/client';
+import { ChatRole, MemberRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -37,6 +37,9 @@ export class ChatService {
     const chat = await this.prisma.chat.findFirst({
       where: {
         id: chatId,
+      },
+      include: {
+        members: true,
       },
     });
 
@@ -84,9 +87,6 @@ export class ChatService {
 
     const folderId = user.folders[0].id;
 
-    console.log(user.folders);
-    console.log(folderId);
-
     return this.prisma.chat.create({
       data: {
         name: chatName,
@@ -98,7 +98,10 @@ export class ChatService {
           },
         },
         members: {
-          create: [{ userId: userId }, { userId: member.id }],
+          create: [
+            { userId: user.id, role: MemberRole.GUEST },
+            { userId: member.id, role: MemberRole.GUEST },
+          ],
         },
       },
       include: {

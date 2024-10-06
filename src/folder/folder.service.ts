@@ -86,6 +86,9 @@ export class FolderService {
       where: {
         id: folderId,
         userId: userId,
+        NOT: {
+          name: 'All Chats',
+        },
       },
       data: {
         name: dto.name,
@@ -155,6 +158,9 @@ export class FolderService {
       where: {
         id: folderId,
         userId: userId,
+        name: {
+          not: 'All Chats',
+        },
       },
     });
 
