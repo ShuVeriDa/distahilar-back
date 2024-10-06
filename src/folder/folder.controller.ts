@@ -58,7 +58,7 @@ export class FolderController {
     @Body() dto: ChatToFolderDto,
     @User('id') userId: string,
   ) {
-    return await this.folderService.addChatToFolder(dto, userId);
+    return await this.folderService.removeChatToFolder(dto, userId);
   }
 
   @HttpCode(201)

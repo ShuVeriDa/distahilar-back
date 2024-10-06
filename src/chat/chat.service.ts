@@ -82,14 +82,19 @@ export class ChatService {
 
     const chatName = `${user.username}-${member.username}`;
 
+    const folderId = user.folders[0].id;
+
+    console.log(user.folders);
+    console.log(folderId);
+
     return this.prisma.chat.create({
       data: {
         name: chatName,
         type: ChatRole.DIALOG,
         link: uuidv4(),
-        folder: {
+        folders: {
           connect: {
-            userId: userId,
+            id: folderId,
           },
         },
         members: {
@@ -135,6 +140,7 @@ export class ChatService {
       if (!dto.delete_both) {
         await this.prisma.chatMember.update({
           where: {
+            id: dto.memberId,
             userId: userId,
             chatId: chatId,
           },

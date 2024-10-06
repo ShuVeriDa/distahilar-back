@@ -1,20 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsArray, IsString, ValidateNested } from 'class-validator';
-
-export class ChatIdsDto {
-  chatId: string;
-}
+import { IsArray, IsString } from 'class-validator';
 
 export class ChatToFolderDto {
   @ApiProperty({
-    type: ChatIdsDto,
+    type: String,
     isArray: true,
   })
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ChatIdsDto)
-  chatIds: ChatIdsDto[];
+  @IsString({ each: true })
+  chatIds: string[];
 
   @IsString()
   folderId: string;

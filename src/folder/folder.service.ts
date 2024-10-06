@@ -21,6 +21,9 @@ export class FolderService {
       where: {
         userId: userId,
       },
+      include: {
+        chats: true,
+      },
     });
 
     return folders;
@@ -42,7 +45,7 @@ export class FolderService {
   }
 
   async getFolderByName(folderName: string, userId: string) {
-    const folder = await this.prisma.folder.findUnique({
+    const folder = await this.prisma.folder.findFirst({
       where: {
         name: folderName,
         userId: userId,
@@ -105,8 +108,8 @@ export class FolderService {
       },
       data: {
         chats: {
-          connect: dto.chatIds.map((obj) => ({
-            id: obj.chatId,
+          connect: dto.chatIds.map((chatId) => ({
+            id: chatId,
           })),
         },
       },
@@ -128,8 +131,8 @@ export class FolderService {
       },
       data: {
         chats: {
-          disconnect: dto.chatIds.map((obj) => ({
-            id: obj.chatId,
+          disconnect: dto.chatIds.map((chatId) => ({
+            id: chatId,
           })),
         },
       },
@@ -148,11 +151,13 @@ export class FolderService {
       throw new NotFoundException('Folder not found');
     }
 
-    return await this.prisma.folder.delete({
+    await this.prisma.folder.delete({
       where: {
         id: folderId,
         userId: userId,
       },
     });
+
+    return 'Folder has been deleted successfully';
   }
 }

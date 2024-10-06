@@ -12,6 +12,9 @@ export class UserService {
   async getById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
+      include: {
+        folders: true,
+      },
     });
   }
 

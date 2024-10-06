@@ -68,8 +68,8 @@ model Chat {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  folderId String?
-  folder   Folder?    @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  folders Folder[] @relation("ChatFolders")
+
   auditLog AuditLog[]
 
   @@index([type, createdAt])
@@ -81,7 +81,7 @@ model ChatMember {
   id   String     @id @default(uuid())
   role MemberRole @default(GUEST)
 
-  userId String @unique
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   chatId String
@@ -90,7 +90,6 @@ model ChatMember {
   joinedAt  DateTime  @default(now())
   deletedAt DateTime?
 
-  @@unique([userId, chatId])
   @@map("chat_members")
 }
 
@@ -196,9 +195,9 @@ model Reaction {
 model Folder {
   id    String @id @default(uuid())
   name  String
-  chats Chat[]
+  chats Chat[] @relation("ChatFolders")
 
-  userId String @unique
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("folders")
