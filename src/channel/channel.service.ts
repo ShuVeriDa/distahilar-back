@@ -83,4 +83,37 @@ export class ChannelService {
       },
     });
   }
+
+  async deleteChannel(channelId: string, userId: string) {
+    const channel = await this.chatService.getChat(channelId);
+    const user = await this.userService.getById(userId);
+
+    if (channel.type !== ChatRole.CHANNEL) {
+      throw new ForbiddenException('This action is not allowed');
+    }
+
+    const member = channel.members.find((member) => member.userId === user.id);
+
+    if (!member) throw new NotFoundException("You don't have rights");
+
+    const isOwner = member.role === MemberRole.OWNER;
+
+    if (!isOwner) throw new ForbiddenException("You don't have rights");
+
+    await this.prisma.chat.delete({
+      where: {
+        id: channelId,
+        members: {
+          some: {
+            userId: user.id,
+            role: {
+              in: [MemberRole.OWNER],
+            },
+          },
+        },
+      },
+    });
+
+    return 'Channel has been deleted';
+  }
 }

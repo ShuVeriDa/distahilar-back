@@ -1,4 +1,12 @@
-import { Body, Controller, HttpCode, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { User } from 'src/user/decorators/user.decorator';
 import { ChannelService } from './channel.service';
@@ -28,5 +36,15 @@ export class ChannelController {
     @Param('id') channelId: string,
   ) {
     return this.channelService.updateChannel(dto, channelId, userId);
+  }
+
+  @HttpCode(200)
+  @Auth()
+  @Delete(':id')
+  async deleteChannel(
+    @Param('id') channelId: string,
+    @User('id') userId: string,
+  ) {
+    return this.channelService.deleteChannel(channelId, userId);
   }
 }

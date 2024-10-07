@@ -131,31 +131,31 @@ export class ChatService {
   async deleteChat(dto: DeleteChatDto, chatId: string, userId: string) {
     const chat = await this.getChat(chatId);
 
-    if (chat.type === ChatRole.DIALOG) {
-      if (dto.delete_both) {
-        await this.prisma.chat.delete({
-          where: {
-            id: chatId,
-          },
-        });
-      }
-
-      if (!dto.delete_both) {
-        await this.prisma.chatMember.update({
-          where: {
-            id: dto.memberId,
-            userId: userId,
-            chatId: chatId,
-          },
-          data: {
-            deletedAt: new Date(),
-          },
-        });
-      }
-
-      return 'Chat has been deleted';
-    } else {
+    if (chat.type !== ChatRole.DIALOG) {
       throw new ForbiddenException('This action is not allowed');
     }
+
+    if (dto.delete_both) {
+      await this.prisma.chat.delete({
+        where: {
+          id: chatId,
+        },
+      });
+    }
+
+    if (!dto.delete_both) {
+      await this.prisma.chatMember.update({
+        where: {
+          id: dto.memberId,
+          userId: userId,
+          chatId: chatId,
+        },
+        data: {
+          deletedAt: new Date(),
+        },
+      });
+    }
+
+    return 'Chat has been deleted';
   }
 }
