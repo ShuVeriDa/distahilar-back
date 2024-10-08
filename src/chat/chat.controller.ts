@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   Param,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
@@ -26,7 +27,7 @@ export class ChatController {
   @Auth()
   @Get(':id')
   async getChat(@Param('id') chatId: string) {
-    return await this.chatService.getChat(chatId);
+    return await this.chatService.getChatById(chatId);
   }
 
   @HttpCode(201)
@@ -34,6 +35,13 @@ export class ChatController {
   @Post()
   async createChat(@Body() dto: CreateChatDto, @User('id') userId: string) {
     return await this.chatService.createChat(dto, userId);
+  }
+
+  @HttpCode(201)
+  @Auth()
+  @Patch('join/:link')
+  async joinChat(@Param('link') link: string, @User('id') userId: string) {
+    return await this.chatService.joinChat(link, userId);
   }
 
   @HttpCode(200)

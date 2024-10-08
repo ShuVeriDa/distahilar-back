@@ -33,10 +33,25 @@ export class ChatService {
     });
   }
 
-  async getChat(chatId: string) {
+  async getChatById(chatId: string) {
     const chat = await this.prisma.chat.findFirst({
       where: {
         id: chatId,
+      },
+      include: {
+        members: true,
+      },
+    });
+
+    if (!chat) throw new NotFoundException('Chat not found');
+
+    return chat;
+  }
+
+  async getChatByLink(link: string) {
+    const chat = await this.prisma.chat.findFirst({
+      where: {
+        link: link,
       },
       include: {
         members: true,
@@ -109,27 +124,41 @@ export class ChatService {
         messages: true,
       },
     });
+  }
 
-    // if (dto.type === ChatRole.GROUP) {
-    //   return await this.prisma.chat.create({
-    //     data: {
-    //       name: dto.name,
-    //       type: dto.type,
-    //       link: uuidv4(),
-    //       members: {
-    //         create: [{ userId: userId }],
-    //       },
-    //     },
-    //     include: {
-    //       members: true,
-    //       messages: true,
-    //     },
-    //   });
-    // }
+  async joinChat(link: string, userId: string) {
+    const chat = await this.getChatByLink(link);
+
+    if (chat.type === ChatRole.DIALOG) {
+      throw new ForbiddenException('This action is not allowed');
+    }
+
+    const isMember = chat.members.some((member) => member.userId === userId);
+
+    if (isMember) throw new ForbiddenException("You're already a member");
+
+    return this.prisma.chat.update({
+      where: {
+        id: chat.id,
+        link: chat.link,
+      },
+      data: {
+        members: {
+          create: {
+            userId,
+            role: MemberRole.GUEST,
+          },
+        },
+      },
+      include: {
+        members: true,
+        messages: true,
+      },
+    });
   }
 
   async deleteChat(dto: DeleteChatDto, chatId: string, userId: string) {
-    const chat = await this.getChat(chatId);
+    const chat = await this.getChatById(chatId);
 
     if (chat.type !== ChatRole.DIALOG) {
       throw new ForbiddenException('This action is not allowed');

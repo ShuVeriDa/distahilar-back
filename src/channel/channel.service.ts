@@ -53,7 +53,7 @@ export class ChannelService {
     channelId: string,
     userId: string,
   ) {
-    const channel = await this.chatService.getChat(channelId);
+    const channel = await this.chatService.getChatById(channelId);
     const user = await this.userService.getById(userId);
 
     if (channel.type !== ChatRole.CHANNEL) {
@@ -85,7 +85,7 @@ export class ChannelService {
   }
 
   async deleteChannel(channelId: string, userId: string) {
-    const channel = await this.chatService.getChat(channelId);
+    const channel = await this.chatService.getChatById(channelId);
     const user = await this.userService.getById(userId);
 
     if (channel.type !== ChatRole.CHANNEL) {

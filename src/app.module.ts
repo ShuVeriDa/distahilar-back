@@ -5,9 +5,10 @@ import { ChatModule } from './chat/chat.module';
 import { UserModule } from './user/user.module';
 import { FolderModule } from './folder/folder.module';
 import { ChannelModule } from './channel/channel.module';
+import { MemberModule } from './member/member.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), AuthModule, UserModule, ChatModule, FolderModule, ChannelModule],
+  imports: [ConfigModule.forRoot(), AuthModule, UserModule, ChatModule, FolderModule, ChannelModule, MemberModule],
   controllers: [],
   providers: [],
 })
