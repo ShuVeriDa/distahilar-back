@@ -92,6 +92,67 @@ export class CommunityService {
     });
   }
 
+  async leaveCommunity(channelId: string, userId: string) {
+    const community = await this.prisma.chat.findFirst({
+      where: {
+        id: channelId,
+        members: {
+          some: {
+            userId,
+          },
+        },
+      },
+      include: {
+        members: true,
+      },
+    });
+
+    if (!community)
+      throw new NotFoundException('Community or member not found');
+
+    if (community.type === ChatRole.DIALOG) {
+      throw new ForbiddenException('This action is not allowed');
+    }
+
+    const user = await this.userService.getById(userId);
+
+    const member = community.members.find(
+      (member) => member.userId === user.id,
+    );
+
+    if (!member) throw new NotFoundException('Member not found');
+
+    const isOwner = member.role === MemberRole.OWNER;
+
+    if (isOwner)
+      throw new ForbiddenException('The owner сan only delete the server');
+
+    await this.prisma.chat.update({
+      where: {
+        id: channelId,
+        members: {
+          some: {
+            id: member.id,
+            userId: user.id,
+          },
+        },
+      },
+      data: {
+        members: {
+          delete: {
+            id: member.id,
+            userId: user.id,
+            NOT: {
+              role: MemberRole.OWNER,
+            },
+          },
+        },
+      },
+    });
+
+    return 'You have successfully logged out of the server';
+  }
+
   async deleteCommunity(channelId: string, userId: string) {
     const community = await this.chatService.getChatById(channelId);
     const user = await this.userService.getById(userId);

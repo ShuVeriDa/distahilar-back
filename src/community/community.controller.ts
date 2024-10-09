@@ -40,6 +40,16 @@ export class CommunityController {
 
   @HttpCode(200)
   @Auth()
+  @Patch('leave/:id')
+  async leaveCommunity(
+    @Param('id') communityId: string,
+    @User('id') userId: string,
+  ) {
+    return this.communityService.leaveCommunity(communityId, userId);
+  }
+
+  @HttpCode(200)
+  @Auth()
   @Delete(':id')
   async deleteCommunity(
     @Param('id') communityId: string,
