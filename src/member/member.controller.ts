@@ -8,12 +8,14 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { User } from 'src/user/decorators/user.decorator';
 import { ChangeRoleDto } from './dto/change-role.dto';
 import { FetchMemberDto } from './dto/fetch.dto';
 import { MemberService } from './member.service';
 
+@ApiTags('members')
 @Controller('members')
 export class MemberController {
   constructor(private readonly memberService: MemberService) {}

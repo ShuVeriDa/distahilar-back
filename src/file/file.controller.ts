@@ -8,6 +8,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags } from '@nestjs/swagger';
 import { FileService } from './file.service';
 import { CustomUploadFileTypeValidator } from './file.validators';
 
@@ -19,6 +20,7 @@ const VALID_UPLOADS_MIME_TYPES = [
   'application/pdf',
 ];
 
+@ApiTags('files')
 @Controller('files')
 export class FileController {
   constructor(private readonly fileService: FileService) {}

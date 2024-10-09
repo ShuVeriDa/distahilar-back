@@ -10,6 +10,7 @@ export class ChatToFolderDto {
   @IsString({ each: true })
   chatIds: string[];
 
+  @ApiProperty()
   @IsString()
   folderId: string;
 }

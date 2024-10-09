@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { ChatRole } from '@prisma/client';
 import {
   IsNotEmpty,
@@ -8,6 +9,7 @@ import {
 } from 'class-validator';
 
 export class CreateCommunityDto {
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   @MinLength(2, {
@@ -15,14 +17,20 @@ export class CreateCommunityDto {
   })
   name: string;
 
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  description: string;
+  description?: string;
 
+  @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
-  imageUrl: string;
+  imageUrl?: string;
 
+  @ApiProperty({
+    enum: ChatRole,
+    description: `${ChatRole.CHANNEL} | ${ChatRole.GROUP}`,
+  })
   @Matches(
     `^${Object.values(ChatRole)
       .filter((v) => typeof v !== 'number')

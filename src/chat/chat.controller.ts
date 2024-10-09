@@ -8,12 +8,14 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { User } from 'src/user/decorators/user.decorator';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create.dto';
 import { DeleteChatDto } from './dto/delete.dto';
 
+@ApiTags('chats')
 @Controller('chats')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}

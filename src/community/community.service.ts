@@ -27,7 +27,7 @@ export class CommunityService {
     const user = await this.userService.getById(userId);
     const folderId = user.folders[0].id;
 
-    const community = await this.prisma.chat.create({
+    await this.prisma.chat.create({
       data: {
         name: dto.name,
         description: dto.description,
@@ -49,7 +49,7 @@ export class CommunityService {
       },
     });
 
-    return community;
+    return 'The community has been successfully created.';
   }
 
   async updateCommunity(
@@ -76,7 +76,7 @@ export class CommunityService {
     if (isGuestOrModerator)
       throw new ForbiddenException("You don't have rights");
 
-    return this.prisma.chat.update({
+    await this.prisma.chat.update({
       where: {
         id: community.id,
       },
@@ -90,6 +90,8 @@ export class CommunityService {
         messages: true,
       },
     });
+
+    return 'Community has been updated successfully.';
   }
 
   async leaveCommunity(channelId: string, userId: string) {
@@ -120,8 +122,6 @@ export class CommunityService {
       (member) => member.userId === user.id,
     );
 
-    if (!member) throw new NotFoundException('Member not found');
-
     const isOwner = member.role === MemberRole.OWNER;
 
     if (isOwner)
@@ -150,7 +150,7 @@ export class CommunityService {
       },
     });
 
-    return 'You have successfully logged out of the server';
+    return 'You have successfully logged out of the community';
   }
 
   async deleteCommunity(channelId: string, userId: string) {
@@ -185,6 +185,6 @@ export class CommunityService {
       },
     });
 
-    return 'Community has been deleted';
+    return 'Community has been deleted successfully';
   }
 }

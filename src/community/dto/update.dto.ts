@@ -1,6 +1,8 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class UpdateCommunityDto {
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   @IsNotEmpty()
@@ -9,10 +11,12 @@ export class UpdateCommunityDto {
   })
   name?: string;
 
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   description?: string;
 
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   imageUrl?: string;

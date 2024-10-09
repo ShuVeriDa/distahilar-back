@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { User } from 'src/user/decorators/user.decorator';
 import { ChatToFolderDto } from './dto/chat-to-folder.dto';
@@ -15,6 +16,7 @@ import { CreateFolderDto } from './dto/create.dto';
 import { UpdateFolderDto } from './dto/update.dto';
 import { FolderService } from './folder.service';
 
+@ApiTags('folders')
 @Controller('folders')
 export class FolderController {
   constructor(private readonly folderService: FolderService) {}
