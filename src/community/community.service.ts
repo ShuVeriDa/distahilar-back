@@ -8,27 +8,31 @@ import { ChatService } from 'src/chat/chat.service';
 import { PrismaService } from 'src/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { v4 as uuidv4 } from 'uuid';
-import { CreateChannelDto } from './dto/create.dto';
-import { UpdateChannelDto } from './dto/update.dto';
+import { CreateCommunityDto } from './dto/create.dto';
+import { UpdateCommunityDto } from './dto/update.dto';
 
 @Injectable()
-export class ChannelService {
+export class CommunityService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
     private readonly chatService: ChatService,
   ) {}
 
-  async createChannel(dto: CreateChannelDto, userId: string) {
+  async createCommunity(dto: CreateCommunityDto, userId: string) {
+    if (dto.type === ChatRole.DIALOG) {
+      throw new ForbiddenException('This action is not allowed');
+    }
+
     const user = await this.userService.getById(userId);
     const folderId = user.folders[0].id;
 
-    const channel = await this.prisma.chat.create({
+    const community = await this.prisma.chat.create({
       data: {
         name: dto.name,
         description: dto.description,
         imageUrl: dto.imageUrl || '/uploads/avatar/channel-logo.png',
-        type: ChatRole.CHANNEL,
+        type: dto.type,
         link: uuidv4(),
         folders: {
           connect: {
@@ -45,32 +49,36 @@ export class ChannelService {
       },
     });
 
-    return channel;
+    return community;
   }
 
-  async updateChannel(
-    dto: UpdateChannelDto,
+  async updateCommunity(
+    dto: UpdateCommunityDto,
     channelId: string,
     userId: string,
   ) {
-    const channel = await this.chatService.getChatById(channelId);
+    const community = await this.chatService.getChatById(channelId);
     const user = await this.userService.getById(userId);
 
-    if (channel.type !== ChatRole.CHANNEL) {
+    if (community.type === ChatRole.DIALOG) {
       throw new ForbiddenException('This action is not allowed');
     }
 
-    const member = channel.members.find((member) => member.userId === user.id);
+    const member = community.members.find(
+      (member) => member.userId === user.id,
+    );
 
     if (!member) throw new NotFoundException("You don't have rights");
 
-    const isGuest = member.role === MemberRole.GUEST;
+    const isGuestOrModerator =
+      member.role === MemberRole.GUEST || member.role === MemberRole.MODERATOR;
 
-    if (isGuest) throw new ForbiddenException("You don't have rights");
+    if (isGuestOrModerator)
+      throw new ForbiddenException("You don't have rights");
 
     return this.prisma.chat.update({
       where: {
-        id: channel.id,
+        id: community.id,
       },
       data: {
         name: dto.name,
@@ -84,15 +92,17 @@ export class ChannelService {
     });
   }
 
-  async deleteChannel(channelId: string, userId: string) {
-    const channel = await this.chatService.getChatById(channelId);
+  async deleteCommunity(channelId: string, userId: string) {
+    const community = await this.chatService.getChatById(channelId);
     const user = await this.userService.getById(userId);
 
-    if (channel.type !== ChatRole.CHANNEL) {
+    if (community.type === ChatRole.DIALOG) {
       throw new ForbiddenException('This action is not allowed');
     }
 
-    const member = channel.members.find((member) => member.userId === user.id);
+    const member = community.members.find(
+      (member) => member.userId === user.id,
+    );
 
     if (!member) throw new NotFoundException("You don't have rights");
 
@@ -114,6 +124,6 @@ export class ChannelService {
       },
     });
 
-    return 'Channel has been deleted';
+    return 'Community has been deleted';
   }
 }

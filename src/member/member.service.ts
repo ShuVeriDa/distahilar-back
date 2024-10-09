@@ -42,31 +42,7 @@ export class MemberService {
       throw new ForbiddenException("The 'OWNER' role cannot be given to users");
     }
 
-    const user = await this.prisma.user.findFirst({
-      where: {
-        id: userId,
-      },
-    });
-    const { member, chat } = await this.getMember(dto, memberId);
-
-    const roleOfUser = chat.members.find((m) => m.userId === user.id);
-
-    const isPossibleToChangeRole =
-      roleOfUser.role === MemberRole.OWNER ||
-      roleOfUser.role === MemberRole.ADMIN;
-
-    if (!isPossibleToChangeRole) {
-      throw new ForbiddenException("You don't have rights");
-    }
-
-    if (
-      member.role === MemberRole.ADMIN &&
-      roleOfUser.role === MemberRole.ADMIN
-    ) {
-      throw new ForbiddenException(
-        'An administrator cannot deprive another administrator of his role',
-      );
-    }
+    const { member, user } = await this.validateMember(dto, memberId, userId);
 
     return await this.prisma.chat.update({
       where: {
@@ -96,5 +72,73 @@ export class MemberService {
         members: true,
       },
     });
+  }
+
+  async removeMember(dto: FetchMemberDto, memberId: string, userId: string) {
+    const { member, user } = await this.validateMember(dto, memberId, userId);
+
+    const isOwner = member.role === MemberRole.OWNER;
+
+    if (!isOwner) throw new ForbiddenException("You don't have rights");
+
+    await this.prisma.chat.update({
+      where: {
+        id: dto.chatId,
+      },
+      data: {
+        members: {
+          delete: {
+            id: member.id,
+            NOT: [
+              {
+                role: MemberRole.OWNER,
+              },
+              {
+                userId: user.id,
+              },
+            ],
+          },
+        },
+      },
+      include: {
+        members: true,
+      },
+    });
+
+    return 'Member has been removed successfully';
+  }
+
+  private async validateMember(
+    dto: FetchMemberDto,
+    memberId: string,
+    userId: string,
+  ) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+      },
+    });
+    const { member, chat } = await this.getMember(dto, memberId);
+
+    const roleOfUser = chat.members.find((m) => m.userId === user.id);
+
+    const isPossibleToChangeRole =
+      roleOfUser.role === MemberRole.OWNER ||
+      roleOfUser.role === MemberRole.ADMIN;
+
+    if (!isPossibleToChangeRole) {
+      throw new ForbiddenException("You don't have rights");
+    }
+
+    if (
+      member.role === MemberRole.ADMIN &&
+      roleOfUser.role === MemberRole.ADMIN
+    ) {
+      throw new ForbiddenException(
+        'An administrator cannot deprive another administrator of his role',
+      );
+    }
+
+    return { member, user };
   }
 }

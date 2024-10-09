@@ -1,4 +1,12 @@
-import { Body, Controller, HttpCode, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { User } from 'src/user/decorators/user.decorator';
 import { ChangeRoleDto } from './dto/change-role.dto';
@@ -25,5 +33,16 @@ export class MemberController {
     @User('id') userId: string,
   ) {
     return await this.memberService.changeRole(dto, memberId, userId);
+  }
+
+  @HttpCode(200)
+  @Auth()
+  @Delete(':id')
+  removeMember(
+    @Body() dto: FetchMemberDto,
+    @Param('id') memberId: string,
+    @User('id') userId: string,
+  ) {
+    return this.memberService.removeMember(dto, memberId, userId);
   }
 }
