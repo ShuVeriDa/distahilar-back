@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   Param,
   Patch,
@@ -16,6 +17,12 @@ import { MemberService } from './member.service';
 @Controller('members')
 export class MemberController {
   constructor(private readonly memberService: MemberService) {}
+
+  @Get(':id')
+  @Auth()
+  getMembers(@Param('id') chatId: string) {
+    return this.memberService.getMembers(chatId);
+  }
 
   @HttpCode(201)
   @Post(':id')

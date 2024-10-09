@@ -7,35 +7,52 @@ import { v4 as uuidv4 } from 'uuid';
 const prisma = new PrismaClient();
 
 const createTestUser = async () => {
-  await prisma.user.create({
-    data: {
+  const users = [
+    {
       email: 'tallar@tallar.du',
-      password: await hash('123456Bb.'),
       name: 'Tallarho Vu So',
       username: 'tallarho',
-      phone: faker.phone.number(),
-      bio: faker.person.bio(),
-      imageUrl: faker.image.avatar(),
-      settings: {
-        create: {
-          language: Language.EN,
+      language: Language.EN,
+    },
+    {
+      email: 'biltoy@nakhcho.vu',
+      name: 'Said-Muhammad Biltoy',
+      username: 'shuverida',
+      language: Language.CHE,
+    },
+  ];
+
+  for (const user of users) {
+    await prisma.user.create({
+      data: {
+        email: user.email,
+        password: await hash('123456Bb.'),
+        name: user.name,
+        username: user.username,
+        phone: faker.phone.number(),
+        bio: faker.person.bio(),
+        imageUrl: faker.image.avatar(),
+        settings: {
+          create: {
+            language: user.language,
+          },
+        },
+        folders: {
+          create: [
+            {
+              name: 'All chats',
+            },
+            {
+              name: 'Personal',
+            },
+            {
+              name: 'Channels and Groups',
+            },
+          ],
         },
       },
-      folders: {
-        create: [
-          {
-            name: 'All chats',
-          },
-          {
-            name: 'Personal',
-          },
-          {
-            name: 'Channels and Groups',
-          },
-        ],
-      },
-    },
-  });
+    });
+  }
 };
 
 const createdUsers = async () => {
@@ -64,7 +81,7 @@ const createdUsers = async () => {
   });
 };
 
-const createChats = async (index: number) => {
+const createChats = async (type: ChatRole, index: number) => {
   const users = await prisma.user.findMany({
     where: {
       username: {
@@ -82,7 +99,7 @@ const createChats = async (index: number) => {
       link: uuidv4(),
       description: faker.company.catchPhraseDescriptor(),
       imageUrl: faker.image.avatar(),
-      type: ChatRole.CHANNEL,
+      type: type,
       folders: {
         connect: {
           id: users[index].folders[0].id,
@@ -117,6 +134,15 @@ const createChatForTestUser = async () => {
     },
   });
 
+  const userShuVeriDa = await prisma.user.findUnique({
+    where: {
+      username: 'shuverida',
+    },
+    include: {
+      folders: true,
+    },
+  });
+
   const user = await prisma.user.findUnique({
     where: {
       username: 'tallarho',
@@ -143,7 +169,7 @@ const createChatForTestUser = async () => {
       userId: users[0].id,
     },
     {
-      name: `${user.username}-${users[1].username}`,
+      name: `${user.username}-${userShuVeriDa.username}`,
       type: ChatRole.DIALOG,
       userId: users[1].id,
     },
@@ -211,8 +237,9 @@ const createChatForTestUser = async () => {
 };
 
 async function up() {
-  const FAKER_ROUNDS_USERS = 10;
-  const FAKER_ROUNDS_CHATS = 4;
+  const FAKER_ROUNDS_USERS = 20;
+  const FAKER_ROUNDS_CHATS_CHANNEL = 4;
+  const FAKER_ROUNDS_CHATS_GROUP = 2;
   dotenv.config();
 
   for (let i = 0; i < FAKER_ROUNDS_USERS; i++) {
@@ -222,8 +249,12 @@ async function up() {
   await createTestUser();
   await createChatForTestUser();
 
-  for (let i = 0; i < FAKER_ROUNDS_CHATS; i++) {
-    await createChats(i);
+  for (let i = 0; i < FAKER_ROUNDS_CHATS_CHANNEL; i++) {
+    await createChats(ChatRole.CHANNEL, i);
+  }
+
+  for (let i = 0; i < FAKER_ROUNDS_CHATS_GROUP; i++) {
+    await createChats(ChatRole.GROUP, i);
   }
 }
 

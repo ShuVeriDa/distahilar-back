@@ -16,6 +16,28 @@ export class MemberService {
     private readonly chatService: ChatService,
   ) {}
 
+  async getMembers(chatId: string) {
+    const chat = await this.chatService.getChatById(chatId);
+
+    const isDialog = chat.type === ChatRole.DIALOG;
+
+    if (isDialog) {
+      throw new ForbiddenException('This action is not allowed');
+    }
+
+    const members = await this.prisma.chatMember.findMany({
+      where: {
+        chatId: chat.id,
+      },
+      include: {
+        user: true,
+        chat: true,
+      },
+    });
+
+    return members;
+  }
+
   async getMember(dto: FetchMemberDto, memberId: string) {
     const chat = await this.chatService.getChatById(dto.chatId);
 
@@ -29,6 +51,10 @@ export class MemberService {
       where: {
         id: memberId,
         chatId: chat.id,
+      },
+      include: {
+        user: true,
+        chat: true,
       },
     });
 
