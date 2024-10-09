@@ -157,6 +157,45 @@ export class ChatService {
     });
   }
 
+  async refreshLink(communityId: string, userId: string) {
+    const chat = await this.prisma.chat.findFirst({
+      where: {
+        id: communityId,
+        members: {
+          some: {
+            userId,
+            role: MemberRole.OWNER,
+          },
+        },
+      },
+      include: {
+        members: true,
+      },
+    });
+
+    if (!chat)
+      throw new NotFoundException("Chat not found or You don't have rights");
+
+    if (chat.type === ChatRole.DIALOG) {
+      throw new ForbiddenException('This action is not allowed');
+    }
+
+    const isOwner =
+      chat.members.find((member) => member.userId === userId).role ===
+      MemberRole.OWNER;
+
+    if (!isOwner) throw new NotFoundException("You don't have rights");
+
+    return this.prisma.chat.update({
+      where: {
+        id: chat.id,
+      },
+      data: {
+        link: uuidv4(),
+      },
+    });
+  }
+
   async deleteChat(dto: DeleteChatDto, chatId: string, userId: string) {
     const chat = await this.getChatById(chatId);
 

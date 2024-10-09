@@ -46,6 +46,16 @@ export class ChatController {
     return await this.chatService.joinChat(link, userId);
   }
 
+  @HttpCode(201)
+  @Auth()
+  @Patch('refresh-link/:id')
+  async refreshLink(
+    @Param('id') communityId: string,
+    @User('id') userId: string,
+  ) {
+    return await this.chatService.refreshLink(communityId, userId);
+  }
+
   @HttpCode(200)
   @Auth()
   @Delete(':id')
