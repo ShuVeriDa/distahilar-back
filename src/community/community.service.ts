@@ -24,7 +24,7 @@ export class CommunityService {
       throw new ForbiddenException('This action is not allowed');
     }
 
-    const user = await this.userService.getById(userId);
+    const user = await this.userService.getUserById(userId);
     const folderId = user.folders[0].id;
 
     await this.prisma.chat.create({
@@ -58,7 +58,7 @@ export class CommunityService {
     userId: string,
   ) {
     const community = await this.chatService.getChatById(channelId);
-    const user = await this.userService.getById(userId);
+    const user = await this.userService.getUserById(userId);
 
     if (community.type === ChatRole.DIALOG) {
       throw new ForbiddenException('This action is not allowed');
@@ -116,7 +116,7 @@ export class CommunityService {
       throw new ForbiddenException('This action is not allowed');
     }
 
-    const user = await this.userService.getById(userId);
+    const user = await this.userService.getUserById(userId);
 
     const member = community.members.find(
       (member) => member.userId === user.id,
@@ -155,7 +155,7 @@ export class CommunityService {
 
   async deleteCommunity(channelId: string, userId: string) {
     const community = await this.chatService.getChatById(channelId);
-    const user = await this.userService.getById(userId);
+    const user = await this.userService.getUserById(userId);
 
     if (community.type === ChatRole.DIALOG) {
       throw new ForbiddenException('This action is not allowed');

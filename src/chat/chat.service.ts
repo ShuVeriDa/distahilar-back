@@ -93,7 +93,7 @@ export class ChatService {
     });
 
     if (chat) throw new ForbiddenException('Chat already exists');
-    const user = await this.userService.getById(userId);
+    const user = await this.userService.getUserById(userId);
 
     const member = await this.userService.getByUserName(dto.username);
     if (!member) throw new NotFoundException('User not found');

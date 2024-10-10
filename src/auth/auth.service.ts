@@ -109,7 +109,7 @@ export class AuthService {
 
     if (!result) throw new UnauthorizedException('Invalid refresh token');
 
-    const { password, ...user } = await this.userService.getById(result.id);
+    const { password, ...user } = await this.userService.getUserById(result.id);
 
     const tokens = await this.issueTokens(user.id);
 

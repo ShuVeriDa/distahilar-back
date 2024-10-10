@@ -4,18 +4,25 @@ import { hash } from 'argon2';
 import { PrismaService } from 'src/prisma.service';
 import { ChangeSettingsDto } from './dto/change-settings.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async getById(id: string) {
-    return this.prisma.user.findUnique({
+  async getUserById(id: string) {
+    const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
         folders: true,
       },
     });
+
+    delete user.password;
+
+    if (!user) throw new NotFoundException('The user not found');
+
+    return user;
   }
 
   async getByEmail(email: string) {
@@ -31,33 +38,37 @@ export class UserService {
   }
 
   async create(dto: CreateUserDto) {
-    const user = {
-      email: dto.email,
-      password: await hash(dto.password),
-      name: dto.name,
-      username: dto.username,
-      phone: dto.phone,
-      bio: dto.bio,
-      imageUrl: dto.imageUrl
-        ? dto.imageUrl
-        : '/uploads/avatar/avatar-default.png',
-      settings: {
-        create: {
-          language: Language.EN,
-        },
-      },
-      folders: {
-        create: [
-          {
-            name: 'All chats',
-          },
-        ],
-      },
-    } as Prisma.UserCreateInput;
+    const user = await this.userObj(dto);
 
     return this.prisma.user.create({
       data: user,
     });
+  }
+
+  async updateUser(dto: UpdateUserDto, userId: string) {
+    const user = await this.getUserById(userId);
+
+    const password = dto.password ? await hash(dto.password) : undefined;
+
+    const createdUser = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        email: dto.email,
+        password: password,
+        name: dto.name,
+        username: dto.username,
+        phone: dto.phone,
+        bio: dto.bio,
+        imageUrl: dto.imageUrl,
+      },
+      include: {
+        folders: true,
+      },
+    });
+
+    delete createdUser.password;
+
+    return createdUser;
   }
 
   async changeSettings(userId: string, dto: ChangeSettingsDto) {
@@ -110,4 +121,34 @@ export class UserService {
 
     return user;
   }
+
+  private userObj = async (dto: CreateUserDto) => {
+    const imageUrl = dto.imageUrl
+      ? dto.imageUrl
+      : '/uploads/avatar/avatar-default.png';
+
+    const user = {
+      email: dto.email,
+      password: await hash(dto.password),
+      name: dto.name,
+      username: dto.username,
+      phone: dto.phone,
+      bio: dto.bio,
+      imageUrl: imageUrl,
+      settings: {
+        create: {
+          language: Language.EN,
+        },
+      },
+      folders: {
+        create: [
+          {
+            name: 'All chats',
+          },
+        ],
+      },
+    } as Prisma.UserCreateInput;
+
+    return user;
+  };
 }

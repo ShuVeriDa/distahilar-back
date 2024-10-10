@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, HttpCode, Patch } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+} from '@nestjs/common';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -8,12 +16,34 @@ import {
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { User } from './decorators/user.decorator';
 import { ChangeSettingsDto } from './dto/change-settings.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
 
 @ApiTags('users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Get(':id')
+  @Auth()
+  @ApiNotFoundResponse({
+    description: 'The user not found',
+  })
+  async getUserById(@Param('id') userId: string) {
+    return this.userService.getUserById(userId);
+  }
+
+  // @Get('search')
+  // async search(@Query('q') query: string) {
+  //   return this.getUserById.searchItems(query);
+  // }
+
+  @HttpCode(201)
+  @Auth()
+  @Patch()
+  async updateUser(@Body() dto: UpdateUserDto, @User('id') userId: string) {
+    return this.userService.updateUser(dto, userId);
+  }
 
   @HttpCode(201)
   @Auth()
