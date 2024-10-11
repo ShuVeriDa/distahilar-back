@@ -10,15 +10,15 @@ import {
 import { Server } from 'socket.io';
 import { AuthWS } from 'src/auth/decorators/auth.decorator';
 import { UserWs } from 'src/user/decorators/user.decorator';
-import { ChatService } from './chat.service';
-import { CreateChatDto } from './dto/create.dto';
+import { CreateMessageDto } from './dto/create-message.dto';
+import { MessageService } from './message.service';
 
 @WebSocketGateway()
-export class ChatGateway
+export class MessageGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
   @WebSocketServer() server: Server;
-  constructor(private readonly chatService: ChatService) {}
+  constructor(private readonly messageService: MessageService) {}
 
   handleDisconnect(client: any) {
     console.log(`Client disconnected: ${client.id}`);
@@ -29,25 +29,25 @@ export class ChatGateway
   }
 
   afterInit(server: Server) {
-    console.log('WebSocket directMessage gateway initialized');
+    console.log('WebSocket message gateway initialized');
   }
 
-  @SubscribeMessage('createChat')
+  @SubscribeMessage('createMessage')
   @AuthWS()
-  async createChat(
-    @MessageBody() dto: CreateChatDto,
+  async createMessage(
+    @MessageBody() dto: CreateMessageDto,
     @UserWs('id') userId: string,
   ) {
     // chatname, chatType, chatId
-    const createChat = await this.chatService.createChat(dto, userId);
+    const createdMessage = await this.messageService.createMessage(dto, userId);
 
-    this.emitCrateChat(createChat.id, createChat);
+    this.emitCrateMessage(createdMessage.chatId, createdMessage);
 
-    return createChat;
+    return createdMessage;
   }
 
-  private emitCrateChat(createdChatId: string, message: any) {
-    const fetchKey = `createdChat:${createdChatId}:create`;
+  private emitCrateMessage(chatId: string, message: any) {
+    const fetchKey = `chat:${chatId}:message:create`;
     this.server.emit(fetchKey, message);
   }
 }

@@ -5,6 +5,7 @@ import { ChatModule } from './chat/chat.module';
 import { ChannelModule } from './community/community.module';
 import { FolderModule } from './folder/folder.module';
 import { MemberModule } from './member/member.module';
+import { MessageModule } from './message/message.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { UserModule } from './user/user.module';
     FolderModule,
     ChannelModule,
     MemberModule,
+    MessageModule,
   ],
   controllers: [],
   providers: [],

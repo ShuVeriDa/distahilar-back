@@ -102,10 +102,14 @@ enum MemberRole {
 
 // Сообщения
 model Message {
-  id          String      @id @default(uuid())
-  content     String?
-  messageType MessageType
-  createdAt   DateTime    @default(now())
+  id            String         @id @default(uuid())
+  content       String?
+  messageType   MessageType    @default(TEXT)
+  reactions     Reaction[]
+  voiceMessages VoiceMessage[]
+  videoMessages VideoMessage[]
+  // fileUrl       String?        @db.Text
+  notifications Notification[]
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -116,11 +120,7 @@ model Message {
   mediaId String?
   media   Media?  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
 
-  reactions     Reaction[]
-  voiceMessages VoiceMessage[]
-  videoMessages VideoMessage[]
-  fileUrl       String?        @db.Text
-  notifications Notification[]
+  createdAt DateTime @default(now())
 
   @@index([chatId, createdAt])
   @@map("messages")
@@ -139,26 +139,28 @@ model Media {
 
 // Голосовые сообщения
 model VoiceMessage {
-  id        String   @id @default(uuid())
-  url       String
-  duration  Int
-  createdAt DateTime @default(now())
+  id       String @id @default(uuid())
+  url      String
+  duration Int
 
   messageId String?
   message   Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 
   @@map("voice_messages")
 }
 
 // Видеосообщения
 model VideoMessage {
-  id        String   @id @default(uuid())
-  url       String
-  duration  Int
-  createdAt DateTime @default(now())
+  id       String @id @default(uuid())
+  url      String
+  duration Int
 
   messageId String?
   message   Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 
   @@map("video_messages")
 }
@@ -245,17 +247,17 @@ model AuditLog {
 }
 
 enum MediaType {
-  Image
-  Video
-  Voice
-  File
+  IMAGE
+  VIDEO
+  VOICE
+  FILE
 }
 
 enum MessageType {
-  Text
-  Voice
-  Video
-  File
+  TEXT
+  VIDEO
+  VOICE
+  FILE
 }
 
 enum ChatRole {
