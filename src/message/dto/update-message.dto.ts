@@ -1,16 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { MediaType, MessageType } from '@prisma/client';
+import { MediaType } from '@prisma/client';
 import { IsNumber, IsOptional, IsString, Matches } from 'class-validator';
 
-export class CreateMessageDto {
+export class UpdateMessageDto {
   @ApiProperty()
   @IsString()
   chatId: string;
 
   @ApiProperty()
   @IsString()
-  content: string;
+  messageId: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  content?: string;
+
+  //This id for mediaId or videoMessageId or voiceMessageId or fileId
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
@@ -27,15 +33,6 @@ export class CreateMessageDto {
   @IsOptional()
   @IsNumber()
   duration?: number;
-
-  @ApiProperty()
-  @Matches(
-    `^${Object.values(MessageType)
-      .filter((v) => typeof v !== 'number')
-      .join('|')}$`,
-    'i',
-  )
-  messageType: MessageType;
 
   @ApiProperty({ required: false })
   @IsOptional()

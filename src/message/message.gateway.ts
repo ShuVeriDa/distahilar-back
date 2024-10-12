@@ -7,10 +7,13 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { Message } from '@prisma/client';
+import { Server, Socket } from 'socket.io';
 import { AuthWS } from 'src/auth/decorators/auth.decorator';
 import { UserWs } from 'src/user/decorators/user.decorator';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { FetchMessageDto } from './dto/fetch-message.dto';
+import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageService } from './message.service';
 
 @WebSocketGateway()
@@ -20,16 +23,30 @@ export class MessageGateway
   @WebSocketServer() server: Server;
   constructor(private readonly messageService: MessageService) {}
 
-  handleDisconnect(client: any) {
+  handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
   }
 
-  handleConnection(client: any, ...args: any[]) {
+  handleConnection(client: Socket, ...args: any[]) {
     console.log(`Client connected: ${client.id} ${args}`);
   }
 
   afterInit(server: Server) {
     console.log('WebSocket message gateway initialized');
+  }
+
+  @SubscribeMessage('getMessages')
+  @AuthWS()
+  async getMessages(
+    @MessageBody() dto: FetchMessageDto,
+    @UserWs('id') userId: string,
+  ) {
+    const { messages, chatId, nextCursor } =
+      await this.messageService.getMessages(dto, userId);
+
+    this.emitFetchMessages(chatId, messages, nextCursor);
+
+    return messages;
   }
 
   @SubscribeMessage('createMessage')
@@ -46,8 +63,35 @@ export class MessageGateway
     return createdMessage;
   }
 
-  private emitCrateMessage(chatId: string, message: any) {
+  @SubscribeMessage('editMessage')
+  @AuthWS()
+  async editMessage(
+    @MessageBody() dto: UpdateMessageDto,
+    @UserWs('id') userId: string,
+  ) {
+    const updatedMessage = await this.messageService.editMessage(dto, userId);
+
+    this.emitUpdateMessage(updatedMessage.chatId, updatedMessage);
+
+    return updatedMessage;
+  }
+
+  private emitFetchMessages(
+    chatId: string,
+    message: Message[],
+    nextCursor?: string,
+  ) {
+    const fetchKey = `chat:${chatId}:messages:fetch`;
+    this.server.to(chatId).emit(fetchKey, message, nextCursor);
+  }
+
+  private emitCrateMessage(chatId: string, message: Message) {
     const fetchKey = `chat:${chatId}:message:create`;
-    this.server.emit(fetchKey, message);
+    this.server.to(chatId).emit(fetchKey, message);
+  }
+
+  private emitUpdateMessage(chatId: string, message: Message) {
+    const fetchKey = `chat:${chatId}:message:update`;
+    this.server.to(chatId).emit(fetchKey, message);
   }
 }
