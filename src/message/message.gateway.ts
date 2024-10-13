@@ -12,6 +12,7 @@ import { Server, Socket } from 'socket.io';
 import { AuthWS } from 'src/auth/decorators/auth.decorator';
 import { UserWs } from 'src/user/decorators/user.decorator';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { DeleteMessageDto } from './dto/delete-message.dto';
 import { FetchMessageDto } from './dto/fetch-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageService } from './message.service';
@@ -74,6 +75,19 @@ export class MessageGateway
     this.emitUpdateMessage(updatedMessage.chatId, updatedMessage);
 
     return updatedMessage;
+  }
+
+  @SubscribeMessage('deleteMessage')
+  @AuthWS()
+  async deleteMessage(
+    @MessageBody() dto: DeleteMessageDto,
+    @UserWs('id') userId: string,
+  ) {
+    const deletedMessage = await this.messageService.deleteMessage(dto, userId);
+
+    this.emitUpdateMessage(deletedMessage.chatId, deletedMessage);
+
+    return 'Message has been deleted';
   }
 
   private emitFetchMessages(

@@ -3,9 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { MemberRole, Message, MessageType } from '@prisma/client';
+import { ChatRole, MemberRole, Message, MessageType } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { DeleteMessageDto } from './dto/delete-message.dto';
 import { FetchMessageDto } from './dto/fetch-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 
@@ -305,6 +306,65 @@ export class MessageService {
     }
   }
 
+  async deleteMessage(dto: DeleteMessageDto, userId: string) {
+    const { chat, message, isMessageOwner, isModerator, isAdmin, isOwner } =
+      await this.validateMessage(dto.chatId, dto.messageId, userId);
+
+    if (!isMessageOwner && !isModerator && !isAdmin && !isOwner) {
+      throw new ForbiddenException(
+        "You don't have permission to delete this message",
+      );
+    }
+
+    if (chat.type === ChatRole.DIALOG) {
+      console.log(ChatRole.DIALOG);
+
+      return await this.deleteMessageForOwnerMessage(
+        dto.delete_both,
+        isMessageOwner,
+        message.id,
+        chat.id,
+        userId,
+      );
+    } else {
+      console.log(!ChatRole.DIALOG);
+      if (isMessageOwner) {
+        console.log(isMessageOwner);
+        return await this.deleteMessageForOwnerMessage(
+          dto.delete_both,
+          isMessageOwner,
+          message.id,
+          chat.id,
+          userId,
+        );
+      }
+
+      if (isOwner || isAdmin || isModerator) {
+        console.log(isOwner || isAdmin || isModerator);
+        return await this.prisma.message.delete({
+          where: {
+            id: message.id,
+            chatId: chat.id,
+            chat: {
+              members: {
+                some: {
+                  role:
+                    MemberRole.OWNER ||
+                    MemberRole.ADMIN ||
+                    MemberRole.MODERATOR,
+                },
+              },
+            },
+          },
+          include: {
+            chat: true,
+          },
+        });
+      }
+    }
+  }
+
+  //Components
   private async messagesForOtherChats(cursor: string, chatId: string) {
     if (cursor) {
       return await this.prisma.message.findMany({
@@ -440,5 +500,39 @@ export class MessageService {
       isAdmin,
       isModerator,
     };
+  }
+
+  private async deleteMessageForOwnerMessage(
+    delete_both: boolean,
+    isMessageOwner: boolean,
+    messageId: string,
+    chatId: string,
+    userId: string,
+  ) {
+    if (delete_both && isMessageOwner) {
+      return await this.prisma.message.delete({
+        where: {
+          id: messageId,
+          chatId: chatId,
+          userId: userId,
+        },
+        include: {
+          chat: true,
+        },
+      });
+    } else {
+      return await this.prisma.message.update({
+        where: {
+          id: messageId,
+          chatId: chatId,
+        },
+        data: {
+          deletedAt: new Date(),
+        },
+        include: {
+          chat: true,
+        },
+      });
+    }
   }
 }

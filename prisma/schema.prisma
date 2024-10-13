@@ -120,7 +120,8 @@ model Message {
   mediaId String?
   media   Media?  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
   @@index([chatId, createdAt])
   @@map("messages")
