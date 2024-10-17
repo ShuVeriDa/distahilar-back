@@ -5,6 +5,7 @@ import { PrismaService } from 'src/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { MessageGateway } from './message.gateway';
 import { MessageService } from './message.service';
+import { ReactionService } from './reaction.service';
 
 @Module({
   providers: [
@@ -14,6 +15,7 @@ import { MessageService } from './message.service';
     ChatService,
     UserService,
     JwtService,
+    ReactionService,
   ],
 })
 export class MessageModule {}

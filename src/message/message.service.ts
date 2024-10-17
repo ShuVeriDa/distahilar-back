@@ -48,9 +48,10 @@ export class MessageService {
         media: true,
         videoMessages: true,
         voiceMessages: true,
+        reactions: true,
       },
     });
-    if (!message) throw new NotFoundException('Message not found');
+    if (!message) throw new NotFoundException('Message or Chat not found');
     return message;
   }
 

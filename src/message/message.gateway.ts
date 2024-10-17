@@ -12,17 +12,22 @@ import { Server, Socket } from 'socket.io';
 import { AuthWS } from 'src/auth/decorators/auth.decorator';
 import { UserWs } from 'src/user/decorators/user.decorator';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { CreateReactionDto } from './dto/create-reaction.dto';
 import { DeleteMessageDto } from './dto/delete-message.dto';
 import { FetchMessageDto } from './dto/fetch-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageService } from './message.service';
+import { ReactionService } from './reaction.service';
 
 @WebSocketGateway()
 export class MessageGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
   @WebSocketServer() server: Server;
-  constructor(private readonly messageService: MessageService) {}
+  constructor(
+    private readonly messageService: MessageService,
+    private reactionService: ReactionService,
+  ) {}
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
@@ -88,6 +93,21 @@ export class MessageGateway
     this.emitUpdateMessage(deletedMessage.chatId, deletedMessage);
 
     return 'Message has been deleted';
+  }
+
+  // Reactions
+
+  @SubscribeMessage('createReaction')
+  @AuthWS()
+  async createReaction(
+    @MessageBody() dto: CreateReactionDto,
+    @UserWs('id') userId: string,
+  ) {
+    const message = await this.reactionService.createReaction(dto, userId);
+
+    this.emitUpdateMessage(message.chatId, message);
+
+    return message;
   }
 
   private emitFetchMessages(
