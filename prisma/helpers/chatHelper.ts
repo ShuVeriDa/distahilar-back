@@ -62,16 +62,17 @@ export const createChatForTestUser = async () => {
     },
   });
 
-  const userShuVeriDa = await prisma.user.findUnique({
+  const userShuVeriDa = await prisma.user.findFirst({
     where: {
       username: 'shuverida',
     },
     include: {
       folders: true,
+      chats: true,
     },
   });
 
-  const userTallar = await prisma.user.findUnique({
+  const userTallar = await prisma.user.findFirst({
     where: {
       username: 'tallarho',
     },
@@ -262,26 +263,8 @@ export const createChatForTestUser = async () => {
 
   const chatBetweenTallarAndShuVeriDa = await prisma.chat.findFirst({
     where: {
-      AND: [
-        {
-          members: {
-            some: {
-              user: {
-                username: userTallar.username,
-              },
-            },
-          },
-        },
-        {
-          members: {
-            some: {
-              user: {
-                username: userShuVeriDa.username,
-              },
-            },
-          },
-        },
-      ],
+      type: ChatRole.DIALOG,
+      name: 'tallarho-shuverida',
     },
     include: {
       members: true,
@@ -310,6 +293,37 @@ export const createChatForTestUser = async () => {
   }
 
   //Chat between tallar and someone
+  const chatBetweenTallarAndSomeOne = await prisma.chat.findFirst({
+    where: {
+      type: ChatRole.DIALOG,
+      AND: [
+        {
+          members: {
+            some: {
+              user: {
+                username: userTallar.username,
+              },
+            },
+          },
+        },
+        {
+          members: {
+            some: {
+              user: {
+                id: users[2].id,
+              },
+            },
+          },
+        },
+      ],
+    },
+    include: {
+      members: true,
+    },
+  });
+
+  console.log({ chatBetweenTallarAndSomeOne });
+
   const chatBetweenTallarAndSome = [
     {
       userId: userTallar.id,
@@ -324,14 +338,14 @@ export const createChatForTestUser = async () => {
   ];
 
   //Messages between tallar and someone
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 30; i++) {
     await prisma.message.create({
       data: {
         userId:
           i % 2 === 0
             ? chatBetweenTallarAndSome[0].userId
             : chatBetweenTallarAndSome[1].userId,
-        chatId: chatBetweenTallarAndShuVeriDa.id,
+        chatId: chatBetweenTallarAndSomeOne.id,
         content:
           i % 2 === 0
             ? chatBetweenTallarAndSome[0].message
@@ -376,6 +390,46 @@ export const createChatForTestUser = async () => {
       members: true,
     },
   });
+
+  const chatK1amelanGullam = await prisma.chat.findFirst({
+    where: {
+      name: 'K1amelan gullam',
+    },
+    include: {
+      members: true,
+    },
+  });
+
+  //Messages 'K1amelan gullam'
+  for (let i = 0; i < 25; i++) {
+    await prisma.message.create({
+      data: {
+        userId:
+          i % 2 === 0
+            ? chatT1emloynChannelMessages[0].userId
+            : chatT1emloynChannelMessages[1].userId,
+        chatId: chatK1amelanGullam.id,
+        content:
+          i % 2 === 0
+            ? chatT1emloynChannelMessages[0].message
+            : chatT1emloynChannelMessages[1].message,
+        messageType:
+          i % 2 === 0
+            ? chatT1emloynChannelMessages[0].type
+            : chatT1emloynChannelMessages[1].type,
+      },
+      include: {
+        chat: true,
+        user: true,
+        media: true,
+        videoMessages: true,
+        voiceMessages: true,
+        _count: true,
+        notifications: true,
+        reactions: true,
+      },
+    });
+  }
 
   //Messages 'T1emloyn channel'
   for (let i = 0; i < 15; i++) {
