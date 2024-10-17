@@ -8,6 +8,7 @@ import { PrismaService } from 'src/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { DeleteMessageDto } from './dto/delete-message.dto';
 import { FetchMessageDto } from './dto/fetch-message.dto';
+import { PinMessageDto } from './dto/pin-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 
 @Injectable()
@@ -330,7 +331,6 @@ export class MessageService {
     } else {
       console.log(!ChatRole.DIALOG);
       if (isMessageOwner) {
-        console.log(isMessageOwner);
         return await this.deleteMessageForOwnerMessage(
           dto.delete_both,
           isMessageOwner,
@@ -362,6 +362,70 @@ export class MessageService {
           },
         });
       }
+    }
+  }
+
+  //Pin a message
+
+  async pinMessage(dto: PinMessageDto, userId: string) {
+    const { chat, message, isModerator, isAdmin, isOwner } =
+      await this.validateMessage(dto.chatId, dto.messageId, userId);
+
+    if (chat.type !== ChatRole.DIALOG && !isModerator && !isAdmin && !isOwner) {
+      throw new ForbiddenException(
+        "You don't have permission to pin this message",
+      );
+    }
+
+    if (message.isPinned) {
+      return await this.prisma.message.update({
+        where: {
+          id: message.id,
+          chatId: chat.id,
+        },
+        data: {
+          isPinned: false,
+          pinnedChat: {
+            disconnect: true,
+          },
+        },
+      });
+    } else {
+      const pinnedMessage = await this.prisma.message.findFirst({
+        where: {
+          isPinned: true,
+          chatId: chat.id,
+        },
+      });
+      if (pinnedMessage) {
+        await this.prisma.message.update({
+          where: {
+            id: pinnedMessage.id,
+            chatId: chat.id,
+          },
+          data: {
+            isPinned: false,
+            pinnedChat: {
+              disconnect: true,
+            },
+          },
+        });
+      }
+
+      return await this.prisma.message.update({
+        where: {
+          id: message.id,
+          chatId: chat.id,
+        },
+        data: {
+          isPinned: true,
+          pinnedChat: {
+            connect: {
+              id: chat.id,
+            },
+          },
+        },
+      });
     }
   }
 

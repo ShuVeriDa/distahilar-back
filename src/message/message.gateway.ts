@@ -15,6 +15,7 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { CreateReactionDto } from './dto/create-reaction.dto';
 import { DeleteMessageDto } from './dto/delete-message.dto';
 import { FetchMessageDto } from './dto/fetch-message.dto';
+import { PinMessageDto } from './dto/pin-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageService } from './message.service';
 import { ReactionService } from './reaction.service';
@@ -96,7 +97,6 @@ export class MessageGateway
   }
 
   // Reactions
-
   @SubscribeMessage('createReaction')
   @AuthWS()
   async createReaction(
@@ -104,6 +104,20 @@ export class MessageGateway
     @UserWs('id') userId: string,
   ) {
     const message = await this.reactionService.createReaction(dto, userId);
+
+    this.emitUpdateMessage(message.chatId, message);
+
+    return message;
+  }
+
+  //Pin a message
+  @SubscribeMessage('pinMessage')
+  @AuthWS()
+  async pinMessage(
+    @MessageBody() dto: PinMessageDto,
+    @UserWs('id') userId: string,
+  ) {
+    const message = await this.messageService.pinMessage(dto, userId);
 
     this.emitUpdateMessage(message.chatId, message);
 
