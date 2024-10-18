@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import {
   ChatRole,
+  MediaType,
   MemberRole,
   MessageType,
   PrismaClient,
@@ -292,6 +293,79 @@ export const createChatForTestUser = async () => {
     });
   }
 
+  await prisma.message.create({
+    data: {
+      userId: userTallar.id,
+      chatId: chatBetweenTallarAndShuVeriDa.id,
+      messageType: MessageType.VIDEO,
+      videoMessages: {
+        create: {
+          url: '/uploads/video/circle-video.mp4',
+          duration: 10,
+        },
+      },
+    },
+    include: {
+      chat: true,
+      user: true,
+      media: true,
+      videoMessages: true,
+      voiceMessages: true,
+      _count: true,
+      notifications: true,
+      reactions: true,
+    },
+  });
+
+  await prisma.message.create({
+    data: {
+      userId: userTallar.id,
+      chatId: chatBetweenTallarAndShuVeriDa.id,
+      messageType: MessageType.VOICE,
+      voiceMessages: {
+        create: {
+          url: '/uploads/audio/audio.ogg',
+          duration: 4,
+        },
+      },
+    },
+    include: {
+      chat: true,
+      user: true,
+      media: true,
+      videoMessages: true,
+      voiceMessages: true,
+      _count: true,
+      notifications: true,
+      reactions: true,
+    },
+  });
+
+  await prisma.message.create({
+    data: {
+      userId: userTallar.id,
+      chatId: chatBetweenTallarAndShuVeriDa.id,
+      content: 'This is a description of the .pdf file',
+      messageType: MessageType.FILE,
+      media: {
+        create: {
+          url: '/uploads/file/file.pdf',
+          type: MediaType.FILE,
+        },
+      },
+    },
+    include: {
+      chat: true,
+      user: true,
+      media: true,
+      videoMessages: true,
+      voiceMessages: true,
+      _count: true,
+      notifications: true,
+      reactions: true,
+    },
+  });
+
   //Chat between tallar and someone
   const chatBetweenTallarAndSomeOne = await prisma.chat.findFirst({
     where: {
@@ -321,8 +395,6 @@ export const createChatForTestUser = async () => {
       members: true,
     },
   });
-
-  console.log({ chatBetweenTallarAndSomeOne });
 
   const chatBetweenTallarAndSome = [
     {

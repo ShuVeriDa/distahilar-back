@@ -120,8 +120,7 @@ model Message {
   chatId String
   chat   Chat   @relation("chatMessages", fields: [chatId], references: [id], onDelete: Cascade)
 
-  mediaId String?
-  media   Media?  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  media Media[]
 
   createdAt DateTime @default(now())
 
@@ -137,11 +136,15 @@ model Message {
 
 // Медиафайлы
 model Media {
-  id        String    @id @default(uuid())
-  url       String
-  type      MediaType
-  createdAt DateTime  @default(now())
-  messages  Message[]
+  id       String    @id @default(uuid())
+  url      String
+  duration Int?
+  type     MediaType
+
+  messageId String?
+  message   Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 
   @@map("media")
 }
