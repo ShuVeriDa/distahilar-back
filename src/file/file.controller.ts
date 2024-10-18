@@ -18,6 +18,12 @@ const VALID_UPLOADS_MIME_TYPES = [
   'image/png',
   'image/gif',
   'application/pdf',
+  'video/mp4', // MP4 формат
+  'video/avi', // AVI формат
+  'video/mpeg', // MPEG формат
+  'video/quicktime', // MOV формат
+  'video/x-matroska', // MKV формат
+  'video/webm', // WebM формат
 ];
 
 @ApiTags('files')

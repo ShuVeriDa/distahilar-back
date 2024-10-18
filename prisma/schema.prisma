@@ -123,8 +123,9 @@ model Message {
   mediaId String?
   media   Media?  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
+  createdAt DateTime @default(now())
+
+  deletedByUsers String[] @default([])
 
   pinnedChatId String?
   pinnedChat   Chat?   @relation("pinnedMessage", fields: [pinnedChatId], references: [id], onDelete: Cascade)

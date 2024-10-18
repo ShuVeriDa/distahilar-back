@@ -312,15 +312,7 @@ export class MessageService {
     const { chat, message, isMessageOwner, isModerator, isAdmin, isOwner } =
       await this.validateMessage(dto.chatId, dto.messageId, userId);
 
-    if (!isMessageOwner && !isModerator && !isAdmin && !isOwner) {
-      throw new ForbiddenException(
-        "You don't have permission to delete this message",
-      );
-    }
-
     if (chat.type === ChatRole.DIALOG) {
-      console.log(ChatRole.DIALOG);
-
       return await this.deleteMessageForOwnerMessage(
         dto.delete_both,
         isMessageOwner,
@@ -329,7 +321,12 @@ export class MessageService {
         userId,
       );
     } else {
-      console.log(!ChatRole.DIALOG);
+      if (!isMessageOwner && !isModerator && !isAdmin && !isOwner) {
+        throw new ForbiddenException(
+          "You don't have permission to delete this message",
+        );
+      }
+
       if (isMessageOwner) {
         return await this.deleteMessageForOwnerMessage(
           dto.delete_both,
@@ -341,7 +338,6 @@ export class MessageService {
       }
 
       if (isOwner || isAdmin || isModerator) {
-        console.log(isOwner || isAdmin || isModerator);
         return await this.prisma.message.delete({
           where: {
             id: message.id,
@@ -474,6 +470,15 @@ export class MessageService {
         },
         where: {
           chatId: chatId,
+          AND: [
+            {
+              NOT: {
+                deletedByUsers: {
+                  has: userId,
+                },
+              },
+            },
+          ],
           chat: {
             members: {
               some: {
@@ -494,6 +499,15 @@ export class MessageService {
         take: this.MESSAGES_BATCH,
         where: {
           chatId: chatId,
+          AND: [
+            {
+              NOT: {
+                deletedByUsers: {
+                  has: userId,
+                },
+              },
+            },
+          ],
           chat: {
             members: {
               some: {
@@ -536,7 +550,7 @@ export class MessageService {
       where: {
         id: messageId,
         chatId: chatId,
-        userId: userId,
+        // userId: userId,
       },
       include: {
         media: true,
@@ -592,7 +606,9 @@ export class MessageService {
           chatId: chatId,
         },
         data: {
-          deletedAt: new Date(),
+          deletedByUsers: {
+            push: userId,
+          },
         },
         include: {
           chat: true,
