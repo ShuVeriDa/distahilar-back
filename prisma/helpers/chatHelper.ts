@@ -279,6 +279,9 @@ export const createChatForTestUser = async () => {
         chatId: chatBetweenTallarAndShuVeriDa.id,
         content: item.message,
         messageType: item.type,
+        readByUsers: {
+          set: [item.userId],
+        },
       },
       include: {
         chat: true,
@@ -287,7 +290,6 @@ export const createChatForTestUser = async () => {
         videoMessages: true,
         voiceMessages: true,
         _count: true,
-        notifications: true,
         reactions: true,
       },
     });
@@ -304,6 +306,9 @@ export const createChatForTestUser = async () => {
           duration: 10,
         },
       },
+      readByUsers: {
+        set: [userTallar.id],
+      },
     },
     include: {
       chat: true,
@@ -312,7 +317,6 @@ export const createChatForTestUser = async () => {
       videoMessages: true,
       voiceMessages: true,
       _count: true,
-      notifications: true,
       reactions: true,
     },
   });
@@ -322,6 +326,9 @@ export const createChatForTestUser = async () => {
       userId: userTallar.id,
       chatId: chatBetweenTallarAndShuVeriDa.id,
       messageType: MessageType.VOICE,
+      readByUsers: {
+        set: [userTallar.id],
+      },
       voiceMessages: {
         create: {
           url: '/uploads/audio/audio.ogg',
@@ -336,7 +343,6 @@ export const createChatForTestUser = async () => {
       videoMessages: true,
       voiceMessages: true,
       _count: true,
-      notifications: true,
       reactions: true,
     },
   });
@@ -347,6 +353,9 @@ export const createChatForTestUser = async () => {
       chatId: chatBetweenTallarAndShuVeriDa.id,
       content: 'This is a description of the .pdf file',
       messageType: MessageType.FILE,
+      readByUsers: {
+        set: [userTallar.id],
+      },
       media: {
         create: {
           url: '/uploads/file/file.pdf',
@@ -361,7 +370,6 @@ export const createChatForTestUser = async () => {
       videoMessages: true,
       voiceMessages: true,
       _count: true,
-      notifications: true,
       reactions: true,
     },
   });
@@ -426,6 +434,14 @@ export const createChatForTestUser = async () => {
           i % 2 === 0
             ? chatBetweenTallarAndSome[0].type
             : chatBetweenTallarAndSome[1].type,
+
+        readByUsers: {
+          set: [
+            i % 2 === 0
+              ? chatBetweenTallarAndSome[0].userId
+              : chatBetweenTallarAndSome[1].userId,
+          ],
+        },
       },
       include: {
         chat: true,
@@ -434,7 +450,6 @@ export const createChatForTestUser = async () => {
         videoMessages: true,
         voiceMessages: true,
         _count: true,
-        notifications: true,
         reactions: true,
       },
     });
@@ -489,6 +504,13 @@ export const createChatForTestUser = async () => {
           i % 2 === 0
             ? chatT1emloynChannelMessages[0].type
             : chatT1emloynChannelMessages[1].type,
+        readByUsers: {
+          set: [
+            i % 2 === 0
+              ? chatT1emloynChannelMessages[0].userId
+              : chatT1emloynChannelMessages[1].userId,
+          ],
+        },
       },
       include: {
         chat: true,
@@ -497,7 +519,6 @@ export const createChatForTestUser = async () => {
         videoMessages: true,
         voiceMessages: true,
         _count: true,
-        notifications: true,
         reactions: true,
       },
     });
@@ -520,6 +541,13 @@ export const createChatForTestUser = async () => {
           i % 2 === 0
             ? chatT1emloynChannelMessages[0].type
             : chatT1emloynChannelMessages[1].type,
+        readByUsers: {
+          set: [
+            i % 2 === 0
+              ? chatT1emloynChannelMessages[0].userId
+              : chatT1emloynChannelMessages[1].userId,
+          ],
+        },
       },
       include: {
         chat: true,
@@ -528,7 +556,6 @@ export const createChatForTestUser = async () => {
         videoMessages: true,
         voiceMessages: true,
         _count: true,
-        notifications: true,
         reactions: true,
       },
     });

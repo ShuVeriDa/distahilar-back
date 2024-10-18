@@ -62,8 +62,10 @@ export class MessageService {
 
     const chat = await this.validateChat(dto.chatId);
 
+    let message: Message;
+
     if (dto.messageType === MessageType.TEXT) {
-      return await this.prisma.message.create({
+      message = await this.prisma.message.create({
         data: {
           content: dto.content,
           chat: {
@@ -77,6 +79,9 @@ export class MessageService {
             },
           },
           messageType: dto.messageType,
+          readByUsers: {
+            set: [userId],
+          },
         },
         include: {
           media: true,
@@ -85,7 +90,7 @@ export class MessageService {
         },
       });
     } else if (dto.messageType === MessageType.VIDEO) {
-      return await this.prisma.message.create({
+      message = await this.prisma.message.create({
         data: {
           content: dto.content,
           chat: {
@@ -105,6 +110,9 @@ export class MessageService {
               duration: dto.duration,
             },
           },
+          readByUsers: {
+            set: [userId],
+          },
         },
         include: {
           media: true,
@@ -113,7 +121,7 @@ export class MessageService {
         },
       });
     } else if (dto.messageType === MessageType.FILE) {
-      return await this.prisma.message.create({
+      message = await this.prisma.message.create({
         data: {
           content: dto.content,
           chat: {
@@ -133,6 +141,9 @@ export class MessageService {
               url: dto.url,
             },
           },
+          readByUsers: {
+            set: [userId],
+          },
         },
         include: {
           media: true,
@@ -141,7 +152,7 @@ export class MessageService {
         },
       });
     } else {
-      return await this.prisma.message.create({
+      message = await this.prisma.message.create({
         data: {
           content: dto.content,
           chat: {
@@ -161,6 +172,9 @@ export class MessageService {
               duration: dto.duration,
             },
           },
+          readByUsers: {
+            set: [userId],
+          },
         },
         include: {
           media: true,
@@ -169,6 +183,8 @@ export class MessageService {
         },
       });
     }
+
+    return message;
   }
 
   async editMessage(dto: UpdateMessageDto, userId: string) {

@@ -23,11 +23,10 @@ model User {
   chats    ChatMember[]
   settings UserSettings?
 
-  messages      Message[]
-  reactions     Reaction[]
-  folders       Folder[]
-  notifications Notification[]
-  AuditLog      AuditLog[]
+  messages  Message[]
+  reactions Reaction[]
+  folders   Folder[]
+  AuditLog  AuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -64,8 +63,7 @@ model Chat {
   pinnedMessage Message?  @relation("pinnedMessage")
   messages      Message[] @relation("chatMessages")
 
-  members       ChatMember[]
-  notifications Notification[]
+  members ChatMember[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -112,7 +110,9 @@ model Message {
   videoMessages VideoMessage[]
   isPinned      Boolean        @default(false)
   // fileUrl       String?        @db.Text
-  notifications Notification[]
+
+  isRead      Boolean  @default(false) // статус прочтения
+  readByUsers String[] @default([])
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -216,31 +216,6 @@ model Folder {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("folders")
-}
-
-// Уведомления
-model Notification {
-  id        String           @id @default(uuid())
-  type      NotificationType
-  isRead    Boolean          @default(false)
-  createdAt DateTime         @default(now())
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  messageId String?
-  message   Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
-
-  chatId String?
-  chat   Chat?   @relation(fields: [chatId], references: [id], onDelete: Cascade)
-
-  @@map("notifications")
-}
-
-enum NotificationType {
-  MESSAGE
-  MENTION
-  INVITATION
 }
 
 // Аудит логов

@@ -33,6 +33,24 @@ export class ChatService {
     });
   }
 
+  async getChat(chatId: string, userId: string) {
+    const chat = await this.getChatById(chatId);
+
+    await this.prisma.message.updateMany({
+      where: {
+        chatId: chatId,
+        // readByUsers: { has: userId },
+      },
+      data: {
+        readByUsers: {
+          push: userId,
+        },
+      },
+    });
+
+    return chat;
+  }
+
   async getChatById(chatId: string) {
     const chat = await this.prisma.chat.findFirst({
       where: {
@@ -40,6 +58,7 @@ export class ChatService {
       },
       include: {
         members: true,
+        messages: true,
       },
     });
 

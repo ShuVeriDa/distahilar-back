@@ -28,8 +28,8 @@ export class ChatController {
 
   @Auth()
   @Get(':id')
-  async getChat(@Param('id') chatId: string) {
-    return await this.chatService.getChatById(chatId);
+  async getChat(@Param('id') chatId: string, @User('id') userId: string) {
+    return await this.chatService.getChat(chatId, userId);
   }
 
   @HttpCode(201)
