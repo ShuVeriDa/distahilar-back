@@ -6,7 +6,7 @@ import { createTestUser, createUsers } from './helpers/userHelper';
 const prisma = new PrismaClient();
 
 async function up() {
-  const FAKER_ROUNDS_USERS = 20;
+  const FAKER_ROUNDS_USERS = 100;
   const FAKER_ROUNDS_CHATS_CHANNEL = 4;
   const FAKER_ROUNDS_CHATS_GROUP = 2;
   dotenv.config();

@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Auth } from 'src/auth/decorators/auth.decorator';
@@ -14,6 +15,7 @@ import { User } from 'src/user/decorators/user.decorator';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create.dto';
 import { DeleteChatDto } from './dto/delete.dto';
+import { ChatSearchDto } from './dto/search.dto';
 
 @ApiTags('chats')
 @Controller('chats')
@@ -24,6 +26,15 @@ export class ChatController {
   @Get()
   async getChats(@User('id') userId: string) {
     return await this.chatService.getChats(userId);
+  }
+
+  @Auth()
+  @Get('search')
+  async getChatByQuery(
+    @Query() dto: ChatSearchDto,
+    @User('id') userId: string,
+  ) {
+    return await this.chatService.getChatByQuery(dto, userId);
   }
 
   @Auth()

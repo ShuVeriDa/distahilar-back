@@ -9,6 +9,8 @@ import { UserService } from 'src/user/user.service';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateChatDto } from './dto/create.dto';
 import { DeleteChatDto } from './dto/delete.dto';
+import { ChatSearchDto } from './dto/search.dto';
+import { FoundedChatsType } from './types.type';
 
 @Injectable()
 export class ChatService {
@@ -49,6 +51,88 @@ export class ChatService {
     });
 
     return chat;
+  }
+
+  async getChatByQuery(dto: ChatSearchDto, userId: string) {
+    const { name } = dto;
+    const chats = await this.prisma.chat.findMany({
+      where: {
+        OR: [
+          {
+            type: {
+              in: [ChatRole.CHANNEL, ChatRole.GROUP],
+            },
+            name: {
+              contains: name,
+              mode: 'insensitive',
+            },
+          },
+          {
+            name: {
+              contains: name,
+              mode: 'insensitive',
+            },
+            type: ChatRole.DIALOG,
+            members: {
+              some: {
+                userId: userId,
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        members: true,
+        messages: true,
+      },
+    });
+
+    const chatUserIds = chats.flatMap((chat) =>
+      chat.members.map((member) => member.userId),
+    );
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        AND: [
+          {
+            OR: [
+              { username: { contains: name, mode: 'insensitive' } },
+              { name: { contains: name, mode: 'insensitive' } },
+            ],
+          },
+          {
+            id: {
+              notIn: chatUserIds,
+            },
+          },
+        ],
+      },
+    });
+
+    const chatsResults: FoundedChatsType[] = chats.map((chat) => {
+      return {
+        imageUrl: chat.imageUrl,
+        name: chat.name,
+        lastMessage: chat.messages[chat.messages.length - 1] || null,
+        lastMessageDate:
+          chat.messages[chat.messages.length - 1]?.createdAt || null,
+        chatId: chat.id,
+      };
+    });
+
+    const usersResults: FoundedChatsType[] = users.map((user) => {
+      return {
+        imageUrl: user.imageUrl,
+        name: user.name,
+        lastMessage: null,
+        lastMessageDate: null,
+        chatId: null,
+      };
+    });
+
+    const result: FoundedChatsType[] = chatsResults.concat(usersResults);
+
+    return result;
   }
 
   async getChatById(chatId: string) {

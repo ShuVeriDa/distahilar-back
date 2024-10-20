@@ -101,7 +101,7 @@ export const createChatForTestUser = async () => {
     {
       name: `${userTallar.username}-${userShuVeriDa.username}`,
       type: ChatRole.DIALOG,
-      userId: users[1].id,
+      userId: userShuVeriDa.id,
     },
     {
       name: `${userTallar.username}-${users[2].username}`,
