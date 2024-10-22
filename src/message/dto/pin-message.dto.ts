@@ -4,11 +4,11 @@ import { IsString, IsUUID } from 'class-validator';
 export class PinMessageDto {
   @ApiProperty()
   @IsString()
-  @IsUUID()
+  @IsUUID('4')
   chatId: string;
 
   @ApiProperty()
   @IsString()
-  @IsUUID()
+  @IsUUID('4')
   messageId: string;
 }

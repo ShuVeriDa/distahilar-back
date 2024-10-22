@@ -1,13 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsString } from 'class-validator';
+import { IsBoolean, IsString, IsUUID } from 'class-validator';
 
 export class DeleteMessageDto {
   @ApiProperty()
   @IsString()
+  @IsUUID('4')
   chatId: string;
 
   @ApiProperty()
   @IsString()
+  @IsUUID('4')
   messageId: string;
 
   @ApiProperty()

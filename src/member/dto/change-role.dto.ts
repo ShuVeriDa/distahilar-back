@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { MemberRole } from '@prisma/client';
-import { IsString, Matches } from 'class-validator';
+import { IsString, IsUUID, Matches } from 'class-validator';
 
 export class ChangeRoleDto {
   @ApiProperty()
   @IsString()
+  @IsUUID('4')
   chatId: string;
 
   @ApiProperty({ enum: MemberRole })

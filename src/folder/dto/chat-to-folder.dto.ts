@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString } from 'class-validator';
+import { IsArray, IsString, IsUUID } from 'class-validator';
 
 export class ChatToFolderDto {
   @ApiProperty({
@@ -12,5 +12,6 @@ export class ChatToFolderDto {
 
   @ApiProperty()
   @IsString()
+  @IsUUID('4')
   folderId: string;
 }

@@ -1,14 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { MediaType } from '@prisma/client';
-import { IsNumber, IsOptional, IsString, Matches } from 'class-validator';
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Matches,
+} from 'class-validator';
 
 export class UpdateMessageDto {
   @ApiProperty()
   @IsString()
+  @IsUUID('4')
   chatId: string;
 
   @ApiProperty()
   @IsString()
+  @IsUUID('4')
   messageId: string;
 
   @ApiProperty({ required: false })
@@ -20,6 +28,7 @@ export class UpdateMessageDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  @IsUUID('4')
   mediaId?: string;
 
   //This url for media or videoMessage or voiceMessage
