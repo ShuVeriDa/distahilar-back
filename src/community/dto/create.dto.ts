@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Matches,
+  MaxLength,
   MinLength,
 } from 'class-validator';
 
@@ -15,11 +16,17 @@ export class CreateCommunityDto {
   @MinLength(2, {
     message: 'Password must be at least 2 characters long',
   })
+  @MaxLength(32, {
+    message: 'Name must be no more than 32 characters long',
+  })
   name: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  @MaxLength(300, {
+    message: 'Description must be no more than 32 characters long',
+  })
   description?: string;
 
   @ApiProperty({ required: false })
