@@ -237,7 +237,12 @@ export class ChatService {
       throw new ForbiddenException('This action is not allowed');
     }
 
-    const isMember = chat.members.some((member) => member.userId === userId);
+    const isMember = await this.prisma.chatMember.findFirst({
+      where: {
+        chatId: chat.id,
+        userId: userId,
+      },
+    });
 
     if (isMember) throw new ForbiddenException("You're already a member");
 
@@ -284,9 +289,14 @@ export class ChatService {
       throw new ForbiddenException('This action is not allowed');
     }
 
-    const isOwner =
-      chat.members.find((member) => member.userId === userId).role ===
-      MemberRole.OWNER;
+    const member = await this.prisma.chatMember.findFirst({
+      where: {
+        chatId: chat.id,
+        userId: userId,
+      },
+    });
+
+    const isOwner = member.role === MemberRole.OWNER;
 
     if (!isOwner) throw new NotFoundException("You don't have rights");
 

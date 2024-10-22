@@ -64,9 +64,12 @@ export class CommunityService {
       throw new ForbiddenException('This action is not allowed');
     }
 
-    const member = community.members.find(
-      (member) => member.userId === user.id,
-    );
+    const member = await this.prisma.chatMember.findFirst({
+      where: {
+        chatId: community.id,
+        userId: user.id,
+      },
+    });
 
     if (!member) throw new NotFoundException("You don't have rights");
 
@@ -118,9 +121,12 @@ export class CommunityService {
 
     const user = await this.userService.getUserById(userId);
 
-    const member = community.members.find(
-      (member) => member.userId === user.id,
-    );
+    const member = await this.prisma.chatMember.findFirst({
+      where: {
+        chatId: community.id,
+        userId: user.id,
+      },
+    });
 
     const isOwner = member.role === MemberRole.OWNER;
 
@@ -161,9 +167,12 @@ export class CommunityService {
       throw new ForbiddenException('This action is not allowed');
     }
 
-    const member = community.members.find(
-      (member) => member.userId === user.id,
-    );
+    const member = await this.prisma.chatMember.findFirst({
+      where: {
+        chatId: community.id,
+        userId: user.id,
+      },
+    });
 
     if (!member) throw new NotFoundException("You don't have rights");
 

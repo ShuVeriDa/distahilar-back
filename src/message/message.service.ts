@@ -20,7 +20,13 @@ export class MessageService {
     const chat = await this.validateChat(dto.chatId);
 
     const isDialog = chat.type === 'DIALOG';
-    const isMember = chat.members.some((member) => member.userId === userId);
+
+    const isMember = await this.prisma.chatMember.findFirst({
+      where: {
+        chatId: chat.id,
+        userId: userId,
+      },
+    });
 
     let messages: Message[] = [];
 
@@ -578,7 +584,13 @@ export class MessageService {
     if (!message) throw new NotFoundException('The message not found');
 
     const chat = await this.validateChat(message.chatId);
-    const member = chat.members.find((member) => member.userId === userId);
+
+    const member = await this.prisma.chatMember.findFirst({
+      where: {
+        chatId: chat.id,
+        userId: userId,
+      },
+    });
 
     if (!member) throw new NotFoundException('The member not found');
 

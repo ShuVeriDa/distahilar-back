@@ -146,7 +146,12 @@ export class MemberService {
     });
     const { member, chat } = await this.getMember(dto, memberId);
 
-    const roleOfUser = chat.members.find((m) => m.userId === user.id);
+    const roleOfUser = await this.prisma.chatMember.findFirst({
+      where: {
+        chatId: chat.id,
+        userId: user.id,
+      },
+    });
 
     const isPossibleToChangeRole =
       roleOfUser.role === MemberRole.OWNER ||
