@@ -1,15 +1,15 @@
 import {
-  BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { verify } from 'argon2';
-import { Response } from 'express';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
-import { LoginDto } from 'src/user/dto/login.dto';
-import { UserService } from 'src/user/user.service';
+  UnauthorizedException
+} from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
+import { verify } from 'argon2'
+import { Response } from 'express'
+import { CreateUserDto } from 'src/user/dto/create-user.dto'
+import { LoginDto } from 'src/user/dto/login.dto'
+import { UserService } from 'src/user/user.service'
 
 @Injectable()
 export class AuthService {
@@ -33,7 +33,7 @@ export class AuthService {
     const oldUser = await this.userService.getByUserName(dto.username);
 
     if (oldUser)
-      throw new BadRequestException('User with this username already exists');
+      throw new ConflictException('User with this username already exists');
 
     const { password: _, ...user } = await this.userService.create(dto);
 

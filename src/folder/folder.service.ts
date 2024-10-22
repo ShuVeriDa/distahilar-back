@@ -1,5 +1,5 @@
 import {
-  ForbiddenException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -59,7 +59,7 @@ export class FolderService {
     const folderExists = await this.getFolderByName(dto.name, userId);
 
     if (folderExists) {
-      throw new ForbiddenException('Folder already exists');
+      throw new ConflictException('Folder already exists');
     }
 
     const folder = await this.prisma.folder.create({

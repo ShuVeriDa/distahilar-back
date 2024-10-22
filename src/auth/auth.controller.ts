@@ -8,7 +8,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import {
-  ApiBadRequestResponse,
+  ApiConflictResponse,
   ApiNotFoundResponse,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -44,7 +44,7 @@ export class AuthController {
 
   @HttpCode(200)
   @Post('register')
-  @ApiBadRequestResponse({
+  @ApiConflictResponse({
     description: 'User with this username already exists',
   })
   async register(

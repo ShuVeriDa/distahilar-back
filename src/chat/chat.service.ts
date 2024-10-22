@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -195,7 +196,7 @@ export class ChatService {
       },
     });
 
-    if (chat) throw new ForbiddenException('Chat already exists');
+    if (chat) throw new ConflictException('Chat already exists');
     const user = await this.userService.getUserById(userId);
 
     const member = await this.userService.getByUserName(dto.username);
