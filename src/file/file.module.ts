@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
-import { FileService } from './file.service';
-import { FileController } from './file.controller';
-import { PrismaService } from '../prisma.service';
-import { path } from 'app-root-path';
+import { ConfigService } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { path } from 'app-root-path';
+import { PrismaService } from '../prisma.service';
+import { CloudinaryConfigService } from './cloudinary.service';
+import { FileController } from './file.controller';
+import { FileService } from './file.service';
 
 @Module({
   imports: [
@@ -13,6 +15,11 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     }),
   ],
   controllers: [FileController],
-  providers: [FileService, PrismaService],
+  providers: [
+    FileService,
+    PrismaService,
+    CloudinaryConfigService,
+    ConfigService,
+  ],
 })
 export class FileModule {}
