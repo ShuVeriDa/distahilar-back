@@ -8,6 +8,7 @@ import { FolderModule } from './folder/folder.module';
 import { MemberModule } from './member/member.module';
 import { MessageModule } from './message/message.module';
 import { UserModule } from './user/user.module';
+import { CallModule } from './call/call.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UserModule } from './user/user.module';
     MemberModule,
     MessageModule,
     FileModule,
+    CallModule,
   ],
   controllers: [],
   providers: [],
