@@ -118,6 +118,7 @@ export class ChatService {
         lastMessageDate:
           chat.messages[chat.messages.length - 1]?.createdAt || null,
         chatId: chat.id,
+        isChat: true,
       };
     });
 
@@ -128,10 +129,15 @@ export class ChatService {
         lastMessage: null,
         lastMessageDate: null,
         chatId: null,
+        isChat: false,
       };
     });
 
-    const result: FoundedChatsType[] = chatsResults.concat(usersResults);
+    const result: FoundedChatsType[] = chatsResults
+      .concat(usersResults)
+      .sort((a, b) => {
+        return a.name.localeCompare(b.name);
+      });
 
     return result;
   }
