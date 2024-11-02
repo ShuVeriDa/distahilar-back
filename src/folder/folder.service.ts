@@ -66,6 +66,7 @@ export class FolderService {
       data: {
         name: dto.name,
         userId: userId,
+        imageUrl: dto.imageUrl,
       },
       include: {
         chats: true,
@@ -92,6 +93,7 @@ export class FolderService {
       },
       data: {
         name: dto.name,
+        imageUrl: dto.imageUrl,
       },
       include: {
         chats: true,

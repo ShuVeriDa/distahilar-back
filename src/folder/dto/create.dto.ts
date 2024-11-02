@@ -11,4 +11,8 @@ export class CreateFolderDto {
     message: 'Name must be no more than 16 characters long',
   })
   name: string;
+
+  @ApiProperty()
+  @IsString()
+  imageUrl: string;
 }

@@ -208,9 +208,10 @@ model Reaction {
 
 // Папки для чатов
 model Folder {
-  id    String @id @default(uuid())
-  name  String
-  chats Chat[] @relation("ChatFolders")
+  id       String  @id @default(uuid())
+  name     String
+  imageUrl String? @db.Text
+  chats    Chat[]  @relation("ChatFolders")
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

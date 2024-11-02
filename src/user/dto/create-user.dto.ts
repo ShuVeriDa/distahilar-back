@@ -57,5 +57,8 @@ export class CreateUserDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  @MaxLength(70, {
+    message: 'Bio must be no more than 70 characters long',
+  })
   bio?: string;
 }

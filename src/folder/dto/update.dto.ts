@@ -12,4 +12,9 @@ export class UpdateFolderDto {
     message: 'Name must be no more than 16 characters long',
   })
   name?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }
