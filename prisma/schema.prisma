@@ -23,7 +23,7 @@ model User {
 
   chats ChatMember[]
 
-  contactSaver Contact?  @relation("contactSaver")
+  contactSaver Contact[] @relation("contactSaver")
   contacts     Contact[] @relation("contact")
 
   settings UserSettings?
@@ -87,12 +87,12 @@ model Contact {
   savedContactId String
   savedContact   User   @relation("contact", fields: [savedContactId], references: [id], onDelete: Cascade)
 
-  contactSaverId String?
-  contactSaver   User?   @relation("contactSaver", fields: [contactSaverId], references: [id], onDelete: Cascade)
+  contactSaverId String
+  contactSaver   User   @relation("contactSaver", fields: [contactSaverId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
-  @@unique([contactSaverId])
+  @@unique([contactSaverId, savedContactId])
   @@index([savedContactId, createdAt])
   @@map("contacts")
 }

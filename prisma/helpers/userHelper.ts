@@ -86,3 +86,78 @@ export const createUsers = async () => {
     },
   });
 };
+
+export const createContacts = async () => {
+  const userTallarho = await prisma.user.findFirst({
+    where: {
+      username: 'tallarho',
+    },
+  });
+
+  const userShuverida = await prisma.user.findFirst({
+    where: {
+      username: 'shuverida',
+    },
+  });
+
+  const users = await prisma.user.findMany({
+    where: {
+      AND: [
+        {
+          username: {
+            not: userShuverida.username,
+          },
+        },
+        {
+          username: {
+            not: userTallarho.username,
+          },
+        },
+      ],
+    },
+    skip: Math.floor(Math.random() * (await prisma.user.count())),
+    take: 10,
+  });
+
+  for (const obj of users) {
+    await prisma.contact.create({
+      data: {
+        savedContact: {
+          connect: {
+            id: obj.id,
+          },
+        },
+        contactSaver: {
+          connect: {
+            id: userTallarho.id,
+          },
+        },
+      },
+      include: {
+        contactSaver: true,
+        savedContact: true,
+      },
+    });
+  }
+
+  for (const user of users) {
+    await prisma.contact.create({
+      data: {
+        savedContact: {
+          connect: {
+            id: user.id,
+          },
+        },
+        contactSaver: {
+          connect: {
+            id: userShuverida.id,
+          },
+        },
+      },
+      include: {
+        contactSaver: true,
+        savedContact: true,
+      },
+    });
+  }
+};

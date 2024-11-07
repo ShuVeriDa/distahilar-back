@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { CreateContactDto } from './dto/create.dto';
+import { ContactSearchDto } from './dto/search.dto';
 
 @Injectable()
 export class ContactService {
@@ -10,12 +11,35 @@ export class ContactService {
     private readonly userService: UserService,
   ) {}
 
-  async getContacts(userId: string) {
+  async searchContacts(dto: ContactSearchDto, userId: string) {
     return await this.prisma.contact.findMany({
       where: {
-        contactSaver: {
-          id: userId,
-        },
+        OR: [
+          {
+            savedContact: {
+              name: dto.name,
+            },
+            contactSaver: {
+              id: userId,
+            },
+          },
+          {
+            savedContact: {
+              surname: dto.name,
+            },
+            contactSaver: {
+              id: userId,
+            },
+          },
+          {
+            savedContact: {
+              username: dto.name,
+            },
+            contactSaver: {
+              id: userId,
+            },
+          },
+        ],
       },
       include: {
         savedContact: {

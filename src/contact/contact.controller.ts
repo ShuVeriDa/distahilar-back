@@ -6,6 +6,7 @@ import {
   HttpCode,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -15,6 +16,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { Auth } from 'src/auth/decorators/auth.decorator';
+import { ChatSearchDto } from 'src/chat/dto/search.dto';
 import { User } from 'src/user/decorators/user.decorator';
 import { ContactService } from './contact.service';
 import { CreateContactDto } from './dto/create.dto';
@@ -25,8 +27,11 @@ export class ContactController {
 
   @Auth()
   @Get()
-  async getContacts(@User('id') userId: string) {
-    return await this.contactService.getContacts(userId);
+  async searchContacts(
+    @Query() dto: ChatSearchDto,
+    @User('id') userId: string,
+  ) {
+    return await this.contactService.searchContacts(dto, userId);
   }
 
   @ApiNotFoundResponse({
