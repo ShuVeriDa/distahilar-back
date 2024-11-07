@@ -14,7 +14,7 @@ export class CreateCommunityDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(2, {
-    message: 'Password must be at least 2 characters long',
+    message: 'Name must be at least 2 characters long',
   })
   @MaxLength(32, {
     message: 'Name must be no more than 32 characters long',

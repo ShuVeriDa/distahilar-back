@@ -144,6 +144,7 @@ export class UserService {
         create: [
           {
             name: 'All chats',
+            imageUrl: 'AllChats',
           },
         ],
       },

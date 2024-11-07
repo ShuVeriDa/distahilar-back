@@ -15,12 +15,17 @@ model User {
   username String  @unique
   password String
   name     String
+  surname  String
   bio      String?
   email    String
   phone    String
   imageUrl String? @db.Text
 
-  chats    ChatMember[]
+  chats ChatMember[]
+
+  contactSaver Contact?  @relation("contactSaver")
+  contacts     Contact[] @relation("contact")
+
   settings UserSettings?
 
   messages  Message[]
@@ -74,6 +79,22 @@ model Chat {
 
   @@index([type, createdAt])
   @@map("chats")
+}
+
+model Contact {
+  id String @id @default(uuid())
+
+  savedContactId String
+  savedContact   User   @relation("contact", fields: [savedContactId], references: [id], onDelete: Cascade)
+
+  contactSaverId String?
+  contactSaver   User?   @relation("contactSaver", fields: [contactSaverId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([contactSaverId])
+  @@index([savedContactId, createdAt])
+  @@map("contacts")
 }
 
 // Участник чата с ролями

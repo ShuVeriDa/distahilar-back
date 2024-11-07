@@ -9,12 +9,14 @@ export const createTestUser = async () => {
     {
       email: 'tallar@tallar.du',
       name: 'Tallarho Vu So',
+      surname: '...',
       username: 'tallarho',
       language: Language.EN,
     },
     {
       email: 'biltoy@nakhcho.vu',
       name: 'Said-Muhammad Biltoy',
+      surname: 'Almurzaev',
       username: 'shuverida',
       language: Language.CHE,
     },
@@ -26,6 +28,7 @@ export const createTestUser = async () => {
         email: user.email,
         password: await hash('123456Bb.'),
         name: user.name,
+        surname: user.surname,
         username: user.username,
         phone: faker.phone.number(),
         bio: faker.person.bio(),
@@ -39,12 +42,15 @@ export const createTestUser = async () => {
           create: [
             {
               name: 'All chats',
+              imageUrl: 'AllChats',
             },
             {
               name: 'Personal',
+              imageUrl: 'User',
             },
             {
               name: 'Channels and Groups',
+              imageUrl: 'Megaphone',
             },
           ],
         },
@@ -58,7 +64,8 @@ export const createUsers = async () => {
     data: {
       email: faker.internet.email(),
       password: await hash(faker.internet.password()),
-      name: faker.person.fullName(),
+      name: faker.person.firstName(),
+      surname: faker.person.lastName(),
       username: faker.internet.userName().toLowerCase(),
       phone: faker.phone.number(),
       bio: faker.person.bio(),
@@ -72,6 +79,7 @@ export const createUsers = async () => {
         create: [
           {
             name: 'All chats',
+            imageUrl: 'AllChats',
           },
         ],
       },

@@ -129,7 +129,7 @@ export class FolderService {
   async removeChatToFolder(dto: ChatToFolderDto, userId: string) {
     const folder = await this.getFolderById(dto.folderId, userId);
 
-    const folderChat = await this.prisma.folder.update({
+    await this.prisma.folder.update({
       where: {
         id: folder.id,
         userId: userId,
@@ -146,7 +146,7 @@ export class FolderService {
       },
     });
 
-    return folderChat;
+    return 'Chat has been removed successfully';
   }
 
   async deleteFolder(folderId: string, userId: string) {

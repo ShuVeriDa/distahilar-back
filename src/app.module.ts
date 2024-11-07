@@ -9,6 +9,7 @@ import { MemberModule } from './member/member.module';
 import { MessageModule } from './message/message.module';
 import { UserModule } from './user/user.module';
 import { CallModule } from './call/call.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CallModule } from './call/call.module';
     MessageModule,
     FileModule,
     CallModule,
+    ContactModule,
   ],
   controllers: [],
   providers: [],
