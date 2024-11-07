@@ -17,7 +17,10 @@ export class ContactService {
         OR: [
           {
             savedContact: {
-              name: dto.name,
+              name: {
+                contains: dto.name,
+                mode: 'insensitive',
+              },
             },
             contactSaver: {
               id: userId,
@@ -25,7 +28,10 @@ export class ContactService {
           },
           {
             savedContact: {
-              surname: dto.name,
+              surname: {
+                contains: dto.name,
+                mode: 'insensitive',
+              },
             },
             contactSaver: {
               id: userId,
@@ -33,7 +39,10 @@ export class ContactService {
           },
           {
             savedContact: {
-              username: dto.name,
+              username: {
+                contains: dto.name,
+                mode: 'insensitive',
+              },
             },
             contactSaver: {
               id: userId,
