@@ -71,7 +71,7 @@ export class ContactController {
     status: 201,
     description: 'The contact has been successfully deleted.',
   })
-  async updateContact(
+  async deleteContact(
     @Param('id') contactId: string,
     @User('id') userId: string,
   ) {

@@ -7,8 +7,8 @@ export class CreateFolderDto {
   @MinLength(2, {
     message: 'Title must be at least 2 characters long',
   })
-  @MaxLength(16, {
-    message: 'Name must be no more than 16 characters long',
+  @MaxLength(12, {
+    message: 'Name must be no more than 12 characters long',
   })
   name: string;
 

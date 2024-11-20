@@ -35,6 +35,17 @@ export class FolderService {
         id: folderId,
         userId: userId,
       },
+      include: {
+        chats: {
+          include: {
+            members: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!folder) {
