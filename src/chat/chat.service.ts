@@ -56,6 +56,7 @@ export class ChatService {
 
   async getChatByQuery(dto: ChatSearchDto, userId: string) {
     const { name } = dto;
+    const user = await this.userService.validateUser(userId);
     const chats = await this.prisma.chat.findMany({
       where: {
         OR: [
@@ -83,7 +84,11 @@ export class ChatService {
         ],
       },
       include: {
-        members: true,
+        members: {
+          include: {
+            user: true,
+          },
+        },
         messages: true,
       },
     });
@@ -111,14 +116,20 @@ export class ChatService {
     });
 
     const chatsResults: FoundedChatsType[] = chats.map((chat) => {
+      const member = chat.members?.filter((m) => m.userId !== user?.id)[0];
+      const memberName = member?.user.name;
+
+      const chatName = chat.type === ChatRole.DIALOG ? memberName : chat.name;
+
       return {
         imageUrl: chat.imageUrl,
-        name: chat.name,
+        name: chatName,
         lastMessage: chat.messages[chat.messages.length - 1] || null,
         lastMessageDate:
           chat.messages[chat.messages.length - 1]?.createdAt || null,
         chatId: chat.id,
-        isChat: true,
+        // isChat: true,
+        type: chat.type,
       };
     });
 
@@ -129,7 +140,8 @@ export class ChatService {
         lastMessage: null,
         lastMessageDate: null,
         chatId: null,
-        isChat: false,
+        // isChat: false,
+        type: ChatRole.DIALOG,
       };
     });
 

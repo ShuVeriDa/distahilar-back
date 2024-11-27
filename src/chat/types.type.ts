@@ -1,4 +1,4 @@
-import { Message } from '@prisma/client';
+import { ChatRole, Message } from '@prisma/client';
 
 export type FoundedChatsType = {
   imageUrl: string;
@@ -6,5 +6,6 @@ export type FoundedChatsType = {
   lastMessage: Message | null;
   lastMessageDate: Date | null;
   chatId: string;
-  isChat: boolean;
+  // isChat: boolean;
+  type: ChatRole;
 };

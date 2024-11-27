@@ -117,7 +117,7 @@ export class FolderService {
   async addChatToFolder(dto: ChatToFolderDto, userId: string) {
     const folder = await this.getFolderById(dto.folderId, userId);
 
-    const folderChat = await this.prisma.folder.update({
+    await this.prisma.folder.update({
       where: {
         id: folder.id,
         userId: userId,
@@ -134,7 +134,7 @@ export class FolderService {
       },
     });
 
-    return folderChat;
+    return 'Chats have been added to folder successfully';
   }
 
   async removeChatToFolder(dto: ChatToFolderDto, userId: string) {
