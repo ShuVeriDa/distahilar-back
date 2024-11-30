@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import { IsArray, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateFolderDto {
   @ApiProperty()
@@ -15,4 +15,12 @@ export class CreateFolderDto {
   @ApiProperty()
   @IsString()
   imageUrl: string;
+
+  @ApiProperty({
+    type: String,
+    isArray: true,
+  })
+  @IsArray()
+  @IsString({ each: true })
+  chatIds: string[];
 }

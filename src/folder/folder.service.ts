@@ -24,6 +24,9 @@ export class FolderService {
       include: {
         chats: true,
       },
+      orderBy: {
+        name: 'asc',
+      },
     });
 
     return folders;
@@ -78,6 +81,11 @@ export class FolderService {
         name: dto.name,
         userId: userId,
         imageUrl: dto.imageUrl,
+        chats: {
+          connect: dto.chatIds.map((chatId) => ({
+            id: chatId,
+          })),
+        },
       },
       include: {
         chats: true,

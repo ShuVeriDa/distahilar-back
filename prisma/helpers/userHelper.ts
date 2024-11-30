@@ -49,7 +49,7 @@ export const createTestUser = async () => {
               imageUrl: 'User',
             },
             {
-              name: 'Channels and Groups',
+              name: 'Community',
               imageUrl: 'Megaphone',
             },
           ],
