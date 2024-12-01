@@ -6,14 +6,15 @@ export class ChangeSettingsDto {
   @ApiProperty()
   @IsOptional()
   @IsBoolean()
-  notifications: boolean;
+  notifications?: boolean;
 
   @ApiProperty({ enum: Language })
+  @IsOptional()
   @Matches(
     `^${Object.values(Language)
       .filter((v) => typeof v !== 'number')
       .join('|')}$`,
     'i',
   )
-  language: Language;
+  language?: Language;
 }

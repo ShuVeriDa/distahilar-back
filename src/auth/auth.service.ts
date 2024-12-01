@@ -2,18 +2,20 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  UnauthorizedException
-} from '@nestjs/common'
-import { JwtService } from '@nestjs/jwt'
-import { verify } from 'argon2'
-import { Response } from 'express'
-import { CreateUserDto } from 'src/user/dto/create-user.dto'
-import { LoginDto } from 'src/user/dto/login.dto'
-import { UserService } from 'src/user/user.service'
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { verify } from 'argon2';
+import { Response } from 'express';
+import { PrismaService } from 'src/prisma.service';
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { LoginDto } from 'src/user/dto/login.dto';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly prisma: PrismaService,
     private jwt: JwtService,
     private userService: UserService,
   ) {}
@@ -79,7 +81,10 @@ export class AuthService {
   }
 
   private async validateUser(dto: LoginDto) {
-    const user = await this.userService.getByUserName(dto.username);
+    const user = await this.prisma.user.findFirst({
+      where: { username: dto.username },
+      include: { settings: true },
+    });
 
     if (!user) throw new NotFoundException('The user not found');
 

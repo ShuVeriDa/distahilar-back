@@ -56,6 +56,7 @@ export class UserService {
         email: dto.email,
         password: password,
         name: dto.name,
+        surname: dto.surname,
         username: dto.username,
         phone: dto.phone,
         bio: dto.bio,
@@ -63,6 +64,7 @@ export class UserService {
       },
       include: {
         folders: true,
+        settings: true,
       },
     });
 
@@ -131,6 +133,7 @@ export class UserService {
       email: dto.email,
       password: await hash(dto.password),
       name: dto.name,
+      surname: dto.surname,
       username: dto.username,
       phone: dto.phone,
       bio: dto.bio,

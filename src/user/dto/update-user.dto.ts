@@ -50,6 +50,16 @@ export class UpdateUserDto {
   })
   name?: string;
 
+  @ApiProperty()
+  @IsString()
+  @MinLength(2, {
+    message: 'Surname must be at least 2 characters long',
+  })
+  @MaxLength(32, {
+    message: 'Surname must be no more than 32 characters long',
+  })
+  surname?: string;
+
   @ApiProperty({ required: false })
   @IsOptional()
   @ApiProperty()
