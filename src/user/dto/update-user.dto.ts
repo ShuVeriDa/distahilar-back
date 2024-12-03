@@ -51,6 +51,7 @@ export class UpdateUserDto {
   name?: string;
 
   @ApiProperty()
+  @IsOptional()
   @IsString()
   @MinLength(2, {
     message: 'Surname must be at least 2 characters long',
