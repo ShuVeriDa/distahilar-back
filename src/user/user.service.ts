@@ -155,4 +155,25 @@ export class UserService {
 
     return user;
   };
+
+  async updateOnlineStatus(isOnline: boolean, userId: string) {
+    const lastSeen = isOnline ? null : new Date();
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        isOnline,
+        lastSeen,
+      },
+    });
+  }
+
+  async getUserStatus(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        isOnline: true,
+        lastSeen: true,
+      },
+    });
+  }
 }

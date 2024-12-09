@@ -33,6 +33,12 @@ export class UserController {
     return this.userService.getUserById(userId);
   }
 
+  @Get(':id/status')
+  @Auth()
+  async getUserStatus(@User('id') userId: string) {
+    return this.userService.getUserStatus(userId);
+  }
+
   // @Get('search')
   // async search(@Query('q') query: string) {
   //   return this.getUserById.searchItems(query);
