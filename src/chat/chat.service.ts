@@ -128,6 +128,9 @@ export class ChatService {
         lastMessageDate:
           chat.messages[chat.messages.length - 1]?.createdAt || null,
         chatId: chat.id,
+        isOnline:
+          chat.type === ChatRole.DIALOG ? member?.user.isOnline : undefined,
+        lastSeen: chat.type === ChatRole.DIALOG ? member?.user.lastSeen : null,
         // isChat: true,
         type: chat.type,
       };
@@ -140,6 +143,8 @@ export class ChatService {
         lastMessage: null,
         lastMessageDate: null,
         chatId: null,
+        isOnline: user.isOnline,
+        lastSeen: user.lastSeen,
         // isChat: false,
         type: ChatRole.DIALOG,
       };

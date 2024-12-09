@@ -6,6 +6,8 @@ export type FoundedChatsType = {
   lastMessage: Message | null;
   lastMessageDate: Date | null;
   chatId: string;
+  lastSeen?: Date | null;
+  isOnline?: boolean | undefined | null;
   // isChat: boolean;
   type: ChatRole;
 };
