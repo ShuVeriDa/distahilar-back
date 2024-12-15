@@ -2,7 +2,6 @@ import {
   MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -15,9 +14,7 @@ import { ChatSearchDto } from './dto/search.dto';
 import { FoundedChatsType } from './types.type';
 
 @WebSocketGateway()
-export class ChatGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
-{
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   constructor(private readonly chatService: ChatService) {}
 
@@ -29,8 +26,9 @@ export class ChatGateway
     console.log(`Client connected: ${client.id} ${args}`);
   }
 
-  afterInit(server: Server) {
-    console.log('WebSocket message gateway initialized');
+  broadcastMessage() {
+    const message = 'Hello, world!';
+    this.server.emit('message', message); // Рассылаем всем подключенным клиентам
   }
 
   @SubscribeMessage('searchChats')
@@ -41,13 +39,14 @@ export class ChatGateway
   ) {
     const chats = await this.chatService.getChatByQuery(dto, userId);
 
-    this.emitFetchChats(userId, chats);
+    this.emitFetchChats(dto.name, chats);
 
     return chats;
   }
 
-  private emitFetchChats(userId: string, chats: FoundedChatsType[]) {
-    const fetchKey = `chats:userId:${userId}:search`;
-    this.server.to(userId).emit(fetchKey, chats);
+  private emitFetchChats(query: string, chats: FoundedChatsType[]) {
+    const fetchKey = `chats:query:${query}:search`;
+
+    this.server.emit(fetchKey, chats);
   }
 }

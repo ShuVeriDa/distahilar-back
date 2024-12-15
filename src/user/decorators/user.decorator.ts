@@ -15,7 +15,8 @@ export const User = createParamDecorator(
 export const UserWs = createParamDecorator(
   (data: keyof UserPrisma, context: ExecutionContext) => {
     const client = context.switchToWs().getClient();
-    const token = client.handshake.headers.authorization.split(' ')[0];
+
+    const token = client.handshake.headers.cookie.split('=')[1];
 
     const jwtService = new JwtService(); // Создаем новый экземпляр сервиса JWT
 

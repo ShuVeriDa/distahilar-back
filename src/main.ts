@@ -15,6 +15,7 @@ async function bootstrap() {
   app.enableCors({
     origin: ['http://localhost:3000'], // Установка разрешенного источника для CORS (доступ с этого домена)
     credentials: true, // Включение поддержки отправки cookie через CORS
+    allowedHeaders: 'Content-Type, Authorization',
     exposedHeaders: 'set-cookie', // Разрешение клиенту доступа к заголовку 'set-cookie' в ответе сервера
   });
   app.useGlobalPipes(

@@ -94,17 +94,17 @@ export const createChatForTestUser = async () => {
       description: 'Х1ара къамелан гуллам бу',
     },
     {
-      name: `${userTallar.username}-${users[0].username}`,
+      name: `${userTallar.name} - ${users[0].name}`,
       type: ChatRole.DIALOG,
       userId: users[0].id,
     },
     {
-      name: `${userTallar.username}-${userShuVeriDa.username}`,
+      name: `${userTallar.name} - ${userShuVeriDa.name}`,
       type: ChatRole.DIALOG,
       userId: userShuVeriDa.id,
     },
     {
-      name: `${userTallar.username}-${users[2].username}`,
+      name: `${userTallar.name} - ${users[2].name}`,
       type: ChatRole.DIALOG,
       userId: users[2].id,
     },
@@ -265,7 +265,7 @@ export const createChatForTestUser = async () => {
   const chatBetweenTallarAndShuVeriDa = await prisma.chat.findFirst({
     where: {
       type: ChatRole.DIALOG,
-      name: 'tallarho-shuverida',
+      name: 'Tallarho Vu So - Said-Muhammad Biltoy',
     },
     include: {
       members: true,

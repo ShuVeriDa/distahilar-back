@@ -7,7 +7,6 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { AuthWS } from 'src/auth/decorators/auth.decorator';
 import { UserService } from './user.service';
 
 @WebSocketGateway()
@@ -20,15 +19,8 @@ export class UserGateway
     private readonly jwtService: JwtService,
   ) {}
 
-  @AuthWS()
   async handleConnection(client: Socket) {
-    const token = client.handshake.headers.authorization;
-
-    const decoded = this.jwtService.verify(token, {
-      secret: process.env.JWT_SECRET,
-    });
-
-    const userId = decoded.id;
+    const userId = this.getUserId(client);
 
     if (userId) {
       await this.userService.updateOnlineStatus(true, userId);
@@ -36,14 +28,7 @@ export class UserGateway
   }
 
   async handleDisconnect(client: Socket) {
-    const token = client.handshake.headers.authorization;
-
-    const decoded = this.jwtService.verify(token, {
-      secret: process.env.JWT_SECRET,
-    });
-
-    const userId = decoded.id;
-
+    const userId = this.getUserId(client);
     if (userId) {
       await this.userService.updateOnlineStatus(false, userId);
     }
@@ -51,5 +36,20 @@ export class UserGateway
 
   afterInit(server: Server) {
     console.log('WebSocket message gateway initialized');
+  }
+
+  getUserId(client: Socket) {
+    if (!client.handshake.headers.cookie) return;
+
+    const token = client.handshake.headers.cookie.split('=')[1];
+
+    if (!token) return;
+
+    const decoded = this.jwtService.verify(token, {
+      secret: process.env.JWT_SECRET,
+    });
+    const userId = decoded.id;
+
+    return userId;
   }
 }

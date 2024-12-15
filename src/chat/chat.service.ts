@@ -57,6 +57,7 @@ export class ChatService {
   async getChatByQuery(dto: ChatSearchDto, userId: string) {
     const { name } = dto;
     const user = await this.userService.validateUser(userId);
+
     const chats = await this.prisma.chat.findMany({
       where: {
         OR: [
@@ -70,14 +71,42 @@ export class ChatService {
             },
           },
           {
-            name: {
-              contains: name,
-              mode: 'insensitive',
-            },
             type: ChatRole.DIALOG,
+            // name: {
+            //   contains: name,
+            //   mode: 'insensitive',
+            // },
+            // members: {
+            //   some: {
+            //     userId: userId,
+            //   },
+            // },
             members: {
               some: {
-                userId: userId,
+                OR: [
+                  {
+                    user: {
+                      name: {
+                        contains: name,
+                        mode: 'insensitive',
+                      },
+                    },
+                    userId: {
+                      not: userId, // Исключаем текущего пользователя
+                    },
+                  },
+                  {
+                    user: {
+                      username: {
+                        contains: name,
+                        mode: 'insensitive',
+                      },
+                    },
+                    userId: {
+                      not: userId, // Исключаем текущего пользователя
+                    },
+                  },
+                ],
               },
             },
           },
@@ -89,13 +118,17 @@ export class ChatService {
             user: true,
           },
         },
-        messages: true,
+        messages: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
-    const chatUserIds = chats.flatMap((chat) =>
-      chat.members.map((member) => member.userId),
-    );
+    const chatUserIds = new Set(
+      chats.flatMap((chat) => chat.members.map((member) => member.userId)),
+    ).add(userId);
 
     const users = await this.prisma.user.findMany({
       where: {
@@ -107,30 +140,28 @@ export class ChatService {
             ],
           },
           {
-            id: {
-              notIn: chatUserIds,
-            },
+            id: { notIn: Array.from(chatUserIds) },
           },
         ],
       },
     });
 
     const chatsResults: FoundedChatsType[] = chats.map((chat) => {
-      const member = chat.members?.filter((m) => m.userId !== user?.id)[0];
+      const member = chat.members.find((m) => m.userId !== user.id);
       const memberName = member?.user.name;
+      const isDialog = chat.type === ChatRole.DIALOG;
 
-      const chatName = chat.type === ChatRole.DIALOG ? memberName : chat.name;
+      const chatName = isDialog ? memberName : chat.name;
+      const imageUrl = isDialog ? member.user.imageUrl : chat.imageUrl;
 
       return {
-        imageUrl: chat.imageUrl,
+        imageUrl: imageUrl,
         name: chatName,
-        lastMessage: chat.messages[chat.messages.length - 1] || null,
-        lastMessageDate:
-          chat.messages[chat.messages.length - 1]?.createdAt || null,
+        lastMessage: chat.messages.at(-1) || null,
+        lastMessageDate: chat.messages.at(-1)?.createdAt || null,
         chatId: chat.id,
-        isOnline:
-          chat.type === ChatRole.DIALOG ? member?.user.isOnline : undefined,
-        lastSeen: chat.type === ChatRole.DIALOG ? member?.user.lastSeen : null,
+        isOnline: isDialog ? member?.user.isOnline : undefined,
+        lastSeen: isDialog ? member?.user.lastSeen : null,
         // isChat: true,
         type: chat.type,
       };
@@ -142,7 +173,7 @@ export class ChatService {
         name: user.name,
         lastMessage: null,
         lastMessageDate: null,
-        chatId: null,
+        chatId: user.id,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
         // isChat: false,
@@ -150,11 +181,9 @@ export class ChatService {
       };
     });
 
-    const result: FoundedChatsType[] = chatsResults
-      .concat(usersResults)
-      .sort((a, b) => {
-        return a.name.localeCompare(b.name);
-      });
+    const result: FoundedChatsType[] = [...chatsResults, ...usersResults].sort(
+      (a, b) => a.name.localeCompare(b.name),
+    );
 
     return result;
   }

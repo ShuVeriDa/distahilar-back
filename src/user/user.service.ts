@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Language, Prisma } from '@prisma/client';
 import { hash } from 'argon2';
@@ -125,9 +126,7 @@ export class UserService {
   }
 
   private userObj = async (dto: CreateUserDto) => {
-    const imageUrl = dto.imageUrl
-      ? dto.imageUrl
-      : '/uploads/avatar/avatar-default.png';
+    const imageUrl = dto.imageUrl ? dto.imageUrl : faker.image.avatar();
 
     const user = {
       email: dto.email,

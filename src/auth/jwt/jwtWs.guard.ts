@@ -8,7 +8,8 @@ export class AuthGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToWs().getClient().handshake;
-    const token = request.headers.authorization;
+    const token = request.headers.cookie.split('=')[1];
+
     if (!token) {
       return false; // No token provided
     }
