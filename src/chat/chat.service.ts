@@ -153,6 +153,9 @@ export class ChatService {
 
       const chatName = isDialog ? memberName : chat.name;
       const imageUrl = isDialog ? member.user.imageUrl : chat.imageUrl;
+      const lengthUnread = chat.messages.filter(
+        (obj) => obj.userId === userId && !obj.isRead,
+      ).length;
 
       return {
         imageUrl: imageUrl,
@@ -160,6 +163,7 @@ export class ChatService {
         lastMessage: chat.messages.at(-1) || null,
         lastMessageDate: chat.messages.at(-1)?.createdAt || null,
         chatId: chat.id,
+        lengthUnread: lengthUnread,
         isOnline: isDialog ? member?.user.isOnline : undefined,
         lastSeen: isDialog ? member?.user.lastSeen : null,
         // isChat: true,
@@ -173,6 +177,7 @@ export class ChatService {
         name: user.name,
         lastMessage: null,
         lastMessageDate: null,
+        lengthUnread: null,
         chatId: user.id,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,

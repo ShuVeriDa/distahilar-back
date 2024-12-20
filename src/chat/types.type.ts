@@ -5,6 +5,7 @@ export type FoundedChatsType = {
   name: string;
   lastMessage: Message | null;
   lastMessageDate: Date | null;
+  lengthUnread: number | null;
   chatId: string;
   lastSeen?: Date | null;
   isOnline?: boolean | undefined | null;

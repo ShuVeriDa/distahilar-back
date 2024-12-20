@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ChatRole } from '@prisma/client';
 import { ChatService } from 'src/chat/chat.service';
 import { PrismaService } from 'src/prisma.service';
 import { ChatToFolderDto } from './dto/chat-to-folder.dto';
@@ -22,14 +23,51 @@ export class FolderService {
         userId: userId,
       },
       include: {
-        chats: true,
+        chats: {
+          include: {
+            messages: true,
+            members: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         name: 'asc',
       },
     });
 
-    return folders;
+    return folders.map((folder) => {
+      return {
+        ...folder,
+        chats: folder.chats.map((chat) => {
+          const member = chat.members.find((m) => m.userId !== userId);
+          const memberName = member?.user.name;
+          const isDialog = chat.type === ChatRole.DIALOG;
+
+          const chatName = isDialog ? memberName : chat.name;
+          const imageUrl = isDialog ? member.user.imageUrl : chat.imageUrl;
+          const lengthUnread = chat.messages.filter(
+            (obj) => obj.userId === userId && !obj.isRead,
+          ).length;
+
+          return {
+            imageUrl: imageUrl,
+            name: chatName,
+            lastMessage: chat.messages.at(-1) || null,
+            lastMessageDate: chat.messages.at(-1)?.createdAt || null,
+            chatId: chat.id,
+            lengthUnread: lengthUnread,
+            isOnline: isDialog ? member?.user.isOnline : undefined,
+            lastSeen: isDialog ? member?.user.lastSeen : null,
+            // isChat: true,
+            type: chat.type,
+          };
+        }),
+      };
+    });
   }
 
   async getFolderById(folderId: string, userId: string) {
