@@ -303,6 +303,7 @@ export const createChatForTestUser = async () => {
       videoMessages: {
         create: {
           url: '/uploads/video/circle-video.mp4',
+          size: 1000,
           duration: 10,
         },
       },
@@ -332,6 +333,7 @@ export const createChatForTestUser = async () => {
       voiceMessages: {
         create: {
           url: '/uploads/audio/audio.ogg',
+          size: 1000,
           duration: 4,
         },
       },

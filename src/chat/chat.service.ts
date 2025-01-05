@@ -199,7 +199,11 @@ export class ChatService {
         id: chatId,
       },
       include: {
-        members: true,
+        members: {
+          include: {
+            user: true,
+          },
+        },
         messages: true,
       },
     });

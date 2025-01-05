@@ -36,6 +36,11 @@ export class CreateMessageDto {
   @IsNumber()
   duration?: number;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  size?: number;
+
   @ApiProperty()
   @Matches(
     `^${Object.values(MessageType)

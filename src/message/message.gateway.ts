@@ -42,6 +42,13 @@ export class MessageGateway
     console.log('WebSocket message gateway initialized');
   }
 
+  @AuthWS()
+  @SubscribeMessage('joinChat')
+  async handleJoinChat(client: Socket, obj: { chatId: string }) {
+    client.join(obj.chatId);
+    console.log(`Client ${client.id} joined chat: ${obj.chatId}`);
+  }
+
   @SubscribeMessage('getMessages')
   @AuthWS()
   async getMessages(
@@ -53,7 +60,7 @@ export class MessageGateway
 
     this.emitFetchMessages(chatId, messages, nextCursor);
 
-    return messages;
+    return { messages, nextCursor };
   }
 
   @SubscribeMessage('createMessage')

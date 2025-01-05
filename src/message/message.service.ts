@@ -13,7 +13,7 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 
 @Injectable()
 export class MessageService {
-  MESSAGES_BATCH = 15;
+  MESSAGES_BATCH = 30;
   constructor(private prisma: PrismaService) {}
 
   async getMessages(dto: FetchMessageDto, userId: string) {
@@ -113,6 +113,7 @@ export class MessageService {
           videoMessages: {
             create: {
               url: dto.url,
+              size: dto.size,
               duration: dto.duration,
             },
           },
@@ -175,6 +176,7 @@ export class MessageService {
           voiceMessages: {
             create: {
               url: dto.url,
+              size: dto.size,
               duration: dto.duration,
             },
           },
@@ -511,9 +513,11 @@ export class MessageService {
         },
         include: {
           chat: true,
+          videoMessages: true,
+          voiceMessages: true,
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: 'asc',
         },
       });
     } else {
@@ -540,9 +544,11 @@ export class MessageService {
         },
         include: {
           chat: true,
+          videoMessages: true,
+          voiceMessages: true,
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: 'asc',
         },
       });
     }

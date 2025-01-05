@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   HttpStatus,
   ParseFilePipeBuilder,
@@ -24,6 +25,8 @@ const VALID_UPLOADS_MIME_TYPES = [
   'video/quicktime', // MOV формат
   'video/x-matroska', // MKV формат
   'video/webm', // WebM формат
+  'audio/ogg',
+  'application/ogg',
 ];
 
 @ApiTags('files')
@@ -47,6 +50,10 @@ export class FileController {
     file: Express.Multer.File,
     @Query('folder') folder?: string,
   ) {
-    return this.fileService.saveFiles(file, folder);
+    try {
+      return await this.fileService.saveFiles(file, folder);
+    } catch (error) {
+      throw new BadRequestException(error.message || 'File upload failed.');
+    }
   }
 }

@@ -25,7 +25,11 @@ export class FolderService {
       include: {
         chats: {
           include: {
-            messages: true,
+            messages: {
+              include: {
+                user: true,
+              },
+            },
             members: {
               include: {
                 user: true,
