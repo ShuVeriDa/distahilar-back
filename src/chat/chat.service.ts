@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ChatRole, MemberRole } from '@prisma/client';
+import { ChatRole, MemberRole, MessageStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -154,7 +154,7 @@ export class ChatService {
       const chatName = isDialog ? memberName : chat.name;
       const imageUrl = isDialog ? member.user.imageUrl : chat.imageUrl;
       const lengthUnread = chat.messages.filter(
-        (obj) => obj.userId === userId && !obj.isRead,
+        (obj) => obj.userId === userId && obj.status !== MessageStatus.READ,
       ).length;
 
       return {

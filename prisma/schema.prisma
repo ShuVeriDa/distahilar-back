@@ -133,9 +133,10 @@ model Message {
   voiceMessages VoiceMessage[]
   videoMessages VideoMessage[]
   isPinned      Boolean        @default(false)
+  status        MessageStatus  @default(SENT)
   // fileUrl       String?        @db.Text
 
-  isRead      Boolean  @default(false) // статус прочтения
+  // isRead      Boolean  @default(false) // статус прочтения
   readByUsers String[] @default([])
 
   userId String
@@ -152,6 +153,11 @@ model Message {
 
   pinnedChatId String?
   pinnedChat   Chat?   @relation("pinnedMessage", fields: [pinnedChatId], references: [id], onDelete: Cascade)
+
+  // Поля для reply functionality
+  repliedToId String? // ID сообщения, на которое отвечаем
+  repliedTo   Message?  @relation("messageReplies", fields: [repliedToId], references: [id], onDelete: NoAction)
+  replies     Message[] @relation("messageReplies") // Ответы на это сообщение
 
   @@unique([pinnedChatId])
   @@index([chatId, createdAt])
@@ -278,4 +284,10 @@ enum ChatRole {
   DIALOG
   CHANNEL
   GROUP
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  READ
 }

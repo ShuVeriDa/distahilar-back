@@ -13,7 +13,7 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 
 @Injectable()
 export class MessageService {
-  MESSAGES_BATCH = 30;
+  MESSAGES_BATCH = 100;
   constructor(private prisma: PrismaService) {}
 
   async getMessages(dto: FetchMessageDto, userId: string) {

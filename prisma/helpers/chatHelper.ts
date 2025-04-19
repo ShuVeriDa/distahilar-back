@@ -3,6 +3,7 @@ import {
   ChatRole,
   MediaType,
   MemberRole,
+  MessageStatus,
   MessageType,
   PrismaClient,
 } from '@prisma/client';
@@ -282,6 +283,7 @@ export const createChatForTestUser = async () => {
         readByUsers: {
           set: [item.userId],
         },
+        status: MessageStatus.SENT,
       },
       include: {
         chat: true,
@@ -307,6 +309,7 @@ export const createChatForTestUser = async () => {
           duration: 10,
         },
       },
+      status: MessageStatus.SENT,
       readByUsers: {
         set: [userTallar.id],
       },
@@ -327,6 +330,7 @@ export const createChatForTestUser = async () => {
       userId: userTallar.id,
       chatId: chatBetweenTallarAndShuVeriDa.id,
       messageType: MessageType.VOICE,
+      status: MessageStatus.SENT,
       readByUsers: {
         set: [userTallar.id],
       },
@@ -355,6 +359,7 @@ export const createChatForTestUser = async () => {
       chatId: chatBetweenTallarAndShuVeriDa.id,
       content: 'This is a description of the .pdf file',
       messageType: MessageType.FILE,
+      status: MessageStatus.SENT,
       readByUsers: {
         set: [userTallar.id],
       },
@@ -423,6 +428,7 @@ export const createChatForTestUser = async () => {
   for (let i = 0; i < 30; i++) {
     await prisma.message.create({
       data: {
+        status: MessageStatus.SENT,
         userId:
           i % 2 === 0
             ? chatBetweenTallarAndSome[0].userId
@@ -493,6 +499,7 @@ export const createChatForTestUser = async () => {
   for (let i = 0; i < 25; i++) {
     await prisma.message.create({
       data: {
+        status: MessageStatus.SENT,
         userId:
           i % 2 === 0
             ? chatT1emloynChannelMessages[0].userId
@@ -530,6 +537,7 @@ export const createChatForTestUser = async () => {
   for (let i = 0; i < 15; i++) {
     await prisma.message.create({
       data: {
+        status: MessageStatus.SENT,
         userId:
           i % 2 === 0
             ? chatT1emloynChannelMessages[0].userId
