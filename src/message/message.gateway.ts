@@ -7,7 +7,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Message } from '@prisma/client';
+import { Message, Prisma } from '@prisma/client';
 import { Server, Socket } from 'socket.io';
 import { AuthWS } from 'src/auth/decorators/auth.decorator';
 import { UserWs } from 'src/user/decorators/user.decorator';
@@ -96,9 +96,12 @@ export class MessageGateway
     @MessageBody() dto: DeleteMessageDto,
     @UserWs('id') userId: string,
   ) {
-    const deletedMessage = await this.messageService.deleteMessage(dto, userId);
+    const deletedMessages = await this.messageService.deleteMessage(
+      dto,
+      userId,
+    );
 
-    this.emitUpdateMessage(deletedMessage.chatId, deletedMessage);
+    this.emitUpdateMessages(deletedMessages[0].chatId, deletedMessages);
 
     return 'Message has been deleted';
   }
@@ -148,5 +151,13 @@ export class MessageGateway
   private emitUpdateMessage(chatId: string, message: Message) {
     const fetchKey = `chat:${chatId}:message:update`;
     this.server.to(chatId).emit(fetchKey, message);
+  }
+
+  private emitUpdateMessages(
+    chatId: string,
+    messages: Message[] | Prisma.BatchPayload,
+  ) {
+    const fetchKey = `chat:${chatId}:messages:update`;
+    this.server.to(chatId).emit(fetchKey, messages);
   }
 }

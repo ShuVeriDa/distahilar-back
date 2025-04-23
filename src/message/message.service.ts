@@ -56,6 +56,7 @@ export class MessageService {
         videoMessages: true,
         voiceMessages: true,
         reactions: true,
+        chat: true,
       },
     });
     if (!message) throw new NotFoundException('Message or Chat not found');
@@ -334,16 +335,18 @@ export class MessageService {
 
   async deleteMessage(dto: DeleteMessageDto, userId: string) {
     const { chat, message, isMessageOwner, isModerator, isAdmin, isOwner } =
-      await this.validateMessage(dto.chatId, dto.messageId, userId);
+      await this.validateMessage(dto.chatId, dto.messageIds[0], userId);
 
     if (chat.type === ChatRole.DIALOG) {
-      return await this.deleteMessageForOwnerMessage(
+      await this.deleteMessageForOwnerMessage(
         dto.delete_both,
         isMessageOwner,
-        message.id,
+        dto.messageIds,
         chat.id,
         userId,
       );
+
+      return [message];
     } else {
       if (!isMessageOwner && !isModerator && !isAdmin && !isOwner) {
         throw new ForbiddenException(
@@ -352,37 +355,103 @@ export class MessageService {
       }
 
       if (isMessageOwner) {
-        return await this.deleteMessageForOwnerMessage(
+        await this.deleteMessageForOwnerMessage(
           dto.delete_both,
           isMessageOwner,
-          message.id,
+          dto.messageIds,
           chat.id,
           userId,
         );
+
+        return [message];
       }
 
       if (isOwner || isAdmin || isModerator) {
-        return await this.prisma.message.delete({
+        await this.prisma.message.deleteMany({
           where: {
-            id: message.id,
+            id: {
+              in: dto.messageIds,
+            },
             chatId: chat.id,
             chat: {
               members: {
                 some: {
-                  role:
-                    MemberRole.OWNER ||
-                    MemberRole.ADMIN ||
-                    MemberRole.MODERATOR,
+                  role: {
+                    in: [
+                      MemberRole.OWNER,
+                      MemberRole.ADMIN,
+                      MemberRole.MODERATOR,
+                    ],
+                  },
                 },
               },
             },
           },
-          include: {
-            chat: true,
-          },
         });
+
+        return [message];
       }
     }
+
+    // const results = await Promise.all(
+    //   dto.messageIds.map(async (id) => {
+    //     const { chat, message, isMessageOwner, isModerator, isAdmin, isOwner } =
+    //       await this.validateMessage(dto.chatId, id, userId);
+
+    //     if (chat.type === ChatRole.DIALOG) {
+    //       return await this.deleteMessageForOwnerMessage(
+    //         dto.delete_both,
+    //         isMessageOwner,
+    //         message.id,
+    //         chat.id,
+    //         userId,
+    //       );
+    //     } else {
+    //       if (!isMessageOwner && !isModerator && !isAdmin && !isOwner) {
+    //         throw new ForbiddenException(
+    //           "You don't have permission to delete this message",
+    //         );
+    //       }
+
+    //       if (isMessageOwner) {
+    //         return await this.deleteMessageForOwnerMessage(
+    //           dto.delete_both,
+    //           isMessageOwner,
+    //           message.id,
+    //           chat.id,
+    //           userId,
+    //         );
+    //       }
+
+    //       if (isOwner || isAdmin || isModerator) {
+    //         return await this.prisma.message.delete({
+    //           where: {
+    //             id: message.id,
+    //             chatId: chat.id,
+    //             chat: {
+    //               members: {
+    //                 some: {
+    //                   role: {
+    //                     in: [
+    //                       MemberRole.OWNER,
+    //                       MemberRole.ADMIN,
+    //                       MemberRole.MODERATOR,
+    //                     ],
+    //                   },
+    //                 },
+    //               },
+    //             },
+    //           },
+    //           include: {
+    //             chat: true,
+    //           },
+    //         });
+    //       }
+    //     }
+    //   }),
+    // );
+
+    // return results;
   }
 
   //Pin a message
@@ -460,6 +529,7 @@ export class MessageService {
         },
         where: { chatId: chatId },
         include: {
+          user: true,
           chat: true,
         },
         orderBy: {
@@ -471,6 +541,7 @@ export class MessageService {
         take: this.MESSAGES_BATCH,
         where: { chatId: chatId },
         include: {
+          user: true,
           chat: true,
         },
         orderBy: {
@@ -515,6 +586,7 @@ export class MessageService {
           chat: true,
           videoMessages: true,
           voiceMessages: true,
+          user: true,
         },
         orderBy: {
           createdAt: 'asc',
@@ -546,6 +618,7 @@ export class MessageService {
           chat: true,
           videoMessages: true,
           voiceMessages: true,
+          user: true,
         },
         orderBy: {
           createdAt: 'asc',
@@ -618,34 +691,32 @@ export class MessageService {
   private async deleteMessageForOwnerMessage(
     delete_both: boolean,
     isMessageOwner: boolean,
-    messageId: string,
+    messageIds: string[],
     chatId: string,
     userId: string,
   ) {
     if (delete_both && isMessageOwner) {
-      return await this.prisma.message.delete({
+      await this.prisma.message.deleteMany({
         where: {
-          id: messageId,
+          id: {
+            in: messageIds,
+          },
           chatId: chatId,
           userId: userId,
         },
-        include: {
-          chat: true,
-        },
       });
     } else {
-      return await this.prisma.message.update({
+      await this.prisma.message.updateMany({
         where: {
-          id: messageId,
+          id: {
+            in: messageIds,
+          },
           chatId: chatId,
         },
         data: {
           deletedByUsers: {
             push: userId,
           },
-        },
-        include: {
-          chat: true,
         },
       });
     }
