@@ -2,6 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { UploadApiResponse } from 'cloudinary';
 import { CloudinaryConfigService } from './cloudinary.service';
 
+interface CloudinaryAudioResponse extends UploadApiResponse {
+  playback_url?: string;
+  asset_folder?: string;
+  display_name?: string;
+  audio: {
+    codec: string;
+    frequency: number;
+    channels: number;
+    channel_layout: string;
+  };
+  is_audio: boolean;
+  duration: number;
+}
+
 @Injectable()
 export class FileService {
   constructor(
@@ -15,18 +29,11 @@ export class FileService {
   async uploadToCloudinary(
     file: Express.Multer.File,
     folder: string,
-  ): Promise<UploadApiResponse> {
+  ): Promise<CloudinaryAudioResponse> {
     return new Promise((resolve, reject) => {
       if (!file || !file.buffer) {
         return reject(new Error('Invalid file buffer.'));
       }
-
-      // Логирование файла для отладки
-      console.log('Uploading file:', {
-        originalName: file.originalname,
-        mimeType: file.mimetype,
-        size: file.size,
-      });
 
       this.cloudinary.uploader
         .upload_stream(
@@ -46,14 +53,13 @@ export class FileService {
   async saveFiles(
     file: Express.Multer.File,
     folder = 'default',
-  ): Promise<{ url: string; size: number }> {
+  ): Promise<{ url: string; size: number; duration?: number }> {
     const result = await this.uploadToCloudinary(file, folder);
-    console.log('result', result);
-    console.log('file', file);
 
     return {
       url: result.secure_url,
       size: result.bytes,
+      duration: result?.duration,
     };
   }
 

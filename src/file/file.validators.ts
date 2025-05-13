@@ -17,6 +17,11 @@ export class CustomUploadFileTypeValidator extends FileValidator {
 
   public isValid(file?: Express.Multer.File): boolean {
     const response = parse(file.buffer);
+
+    if (file.mimetype === 'audio/webm') {
+      return this._allowedMimeTypes.includes(file.mimetype);
+    }
+
     return this._allowedMimeTypes.includes(response.mime);
   }
 

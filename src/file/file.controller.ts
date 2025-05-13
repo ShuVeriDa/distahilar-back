@@ -27,6 +27,8 @@ const VALID_UPLOADS_MIME_TYPES = [
   'video/webm', // WebM формат
   'audio/ogg',
   'application/ogg',
+  'audio/webm',
+  'webm',
 ];
 
 @ApiTags('files')
