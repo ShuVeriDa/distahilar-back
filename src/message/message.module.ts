@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ChatService } from 'src/chat/chat.service';
+import { FolderService } from 'src/folder/folder.service';
 import { PrismaService } from 'src/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { MessageGateway } from './message.gateway';
@@ -16,6 +17,7 @@ import { ReactionService } from './reaction.service';
     UserService,
     JwtService,
     ReactionService,
+    FolderService,
   ],
 })
 export class MessageModule {}

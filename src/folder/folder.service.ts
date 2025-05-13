@@ -149,7 +149,7 @@ export class FolderService {
         id: folderId,
         userId: userId,
         NOT: {
-          name: 'All Chats',
+          name: 'All chats',
         },
       },
       data: {
@@ -222,7 +222,7 @@ export class FolderService {
         id: folderId,
         userId: userId,
         name: {
-          not: 'All Chats',
+          not: 'All chats',
         },
       },
     });

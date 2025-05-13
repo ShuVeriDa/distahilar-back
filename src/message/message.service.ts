@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ChatRole, MemberRole, Message, MessageType } from '@prisma/client';
+import { FolderService } from 'src/folder/folder.service';
 import { PrismaService } from 'src/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { DeleteMessageDto } from './dto/delete-message.dto';
@@ -14,7 +15,10 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 @Injectable()
 export class MessageService {
   MESSAGES_BATCH = 100;
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly folderService: FolderService,
+  ) {}
 
   async getMessages(dto: FetchMessageDto, userId: string) {
     const chat = await this.validateChat(dto.chatId);
@@ -70,6 +74,40 @@ export class MessageService {
     const chat = await this.validateChat(dto.chatId);
 
     let message: Message;
+
+    const isChatExistInFolder = await this.prisma.chat.findFirst({
+      where: {
+        id: chat.id,
+        folders: {
+          some: {
+            userId: userId,
+          },
+        },
+      },
+    });
+
+    if (!isChatExistInFolder) {
+      const folders = await this.folderService.fetchFolders(userId);
+
+      const allFolder = folders.find((f) => f.name === 'All chats');
+
+      await this.prisma.folder.update({
+        where: {
+          id: allFolder.id,
+          userId: userId,
+        },
+        data: {
+          chats: {
+            connect: {
+              id: chat.id,
+            },
+          },
+        },
+        include: {
+          chats: true,
+        },
+      });
+    }
 
     if (dto.messageType === MessageType.TEXT) {
       message = await this.prisma.message.create({
@@ -634,6 +672,7 @@ export class MessageService {
       },
       include: {
         members: true,
+        folders: true,
       },
     });
 
