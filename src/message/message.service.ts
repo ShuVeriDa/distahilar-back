@@ -3,7 +3,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ChatRole, MemberRole, Message, MessageType } from '@prisma/client';
+import {
+  ChatRole,
+  MemberRole,
+  Message,
+  MessageStatus,
+  MessageType,
+} from '@prisma/client';
 import { FolderService } from 'src/folder/folder.service';
 import { PrismaService } from 'src/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -23,18 +29,20 @@ export class MessageService {
   async getMessages(dto: FetchMessageDto, userId: string) {
     const chat = await this.validateChat(dto.chatId);
 
-    const isDialog = chat.type === 'DIALOG';
+    const isDialog = chat.type === ChatRole.DIALOG;
 
-    const isMember = await this.prisma.chatMember.findFirst({
+    const meAsMember = await this.prisma.chatMember.findFirst({
       where: {
         chatId: chat.id,
         userId: userId,
       },
     });
 
+    await this.markAsRead(chat.id, userId);
+
     let messages: Message[] = [];
 
-    if (isDialog && isMember) {
+    if (isDialog && meAsMember) {
       messages = await this.messagesForDialog(dto.cursor, chat.id, userId);
     } else {
       messages = await this.messagesForOtherChats(dto.cursor, chat.id);
@@ -113,6 +121,7 @@ export class MessageService {
       message = await this.prisma.message.create({
         data: {
           content: dto.content,
+          status: MessageStatus.PENDING,
           chat: {
             connect: {
               id: chat.id,
@@ -138,6 +147,7 @@ export class MessageService {
       message = await this.prisma.message.create({
         data: {
           content: dto.content,
+          status: MessageStatus.PENDING,
           chat: {
             connect: {
               id: chat.id,
@@ -170,6 +180,7 @@ export class MessageService {
       message = await this.prisma.message.create({
         data: {
           content: dto.content,
+          status: MessageStatus.PENDING,
           chat: {
             connect: {
               id: chat.id,
@@ -201,6 +212,7 @@ export class MessageService {
       message = await this.prisma.message.create({
         data: {
           content: dto.content,
+          status: MessageStatus.PENDING,
           chat: {
             connect: {
               id: chat.id,
@@ -230,6 +242,17 @@ export class MessageService {
         },
       });
     }
+
+    await this.prisma.message.update({
+      where: {
+        id: message.id,
+        chatId: chat.id,
+        userId: userId,
+      },
+      data: {
+        status: MessageStatus.SENT,
+      },
+    });
 
     return message;
   }
@@ -369,6 +392,34 @@ export class MessageService {
         },
       });
     }
+  }
+
+  async markAsRead(chatId: string, userId: string) {
+    await this.prisma.message.updateMany({
+      where: {
+        chatId: chatId,
+        userId: { not: userId },
+        status: { not: MessageStatus.READ },
+        NOT: {
+          deletedByUsers: {
+            has: userId,
+          },
+        },
+        chat: {
+          members: {
+            some: {
+              userId: userId,
+            },
+          },
+        },
+      },
+      data: {
+        status: MessageStatus.READ,
+        readByUsers: {
+          push: [userId],
+        },
+      },
+    });
   }
 
   async deleteMessage(dto: DeleteMessageDto, userId: string) {
