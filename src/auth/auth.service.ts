@@ -83,7 +83,7 @@ export class AuthService {
   private async validateUser(dto: LoginDto) {
     const user = await this.prisma.user.findFirst({
       where: { username: dto.username },
-      include: { settings: true },
+      include: { settings: true, contactSaver: true },
     });
 
     if (!user) throw new NotFoundException('The user not found');

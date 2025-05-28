@@ -72,9 +72,9 @@ export class ContactController {
     description: 'The contact has been successfully deleted.',
   })
   async deleteContact(
-    @Param('id') contactId: string,
+    @Param('id') interlocutorId: string,
     @User('id') userId: string,
   ) {
-    return this.contactService.deleteContact(contactId, userId);
+    return this.contactService.deleteContact(interlocutorId, userId);
   }
 }

@@ -114,11 +114,39 @@ export class ContactService {
       },
     });
 
-    return 'The contact has been successfully created.';
+    const contacts = await this.prisma.contact.findMany({
+      where: {
+        contactSaver: {
+          id: userId,
+        },
+      },
+    });
+
+    return contacts;
   }
 
-  async deleteContact(contactId: string, userId: string) {
-    const contact = await this.getContact(contactId, userId);
+  async deleteContact(interlocutorId: string, userId: string) {
+    const contact = await this.prisma.contact.findFirst({
+      where: {
+        savedContactId: interlocutorId,
+      },
+      include: {
+        savedContact: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            surname: true,
+            bio: true,
+            email: true,
+            phone: true,
+            imageUrl: true,
+          },
+        },
+      },
+    });
+
+    if (!contact) throw new NotFoundException('The contact not found.');
 
     await this.prisma.contact.delete({
       where: {
@@ -129,6 +157,14 @@ export class ContactService {
       },
     });
 
-    return 'The contact has been successfully deleted.';
+    const contacts = await this.prisma.contact.findMany({
+      where: {
+        contactSaver: {
+          id: userId,
+        },
+      },
+    });
+
+    return contacts;
   }
 }
