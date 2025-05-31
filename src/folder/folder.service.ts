@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ChatRole, MessageStatus } from '@prisma/client';
+import { ChatRole } from '@prisma/client';
 import { ChatService } from 'src/chat/chat.service';
 import { PrismaService } from 'src/prisma.service';
 import { ChatToFolderDto } from './dto/chat-to-folder.dto';
@@ -53,15 +53,24 @@ export class FolderService {
 
           const chatName = isDialog ? memberName : chat.name;
           const imageUrl = isDialog ? member.user.imageUrl : chat.imageUrl;
-          const lengthUnread = chat.messages.filter(
-            (obj) => obj.userId === userId && obj.status !== MessageStatus.READ,
+
+          const visibleMessages = chat.messages.filter(
+            (msg) => !msg.deletedByUsers?.includes(userId),
+          );
+
+          const lengthUnread = visibleMessages.filter(
+            (obj) =>
+              obj.userId === member.userId &&
+              obj.readByUsers.some((id) => id === userId),
           ).length;
+
+          const lastMessage = visibleMessages.at(-1);
 
           return {
             imageUrl: imageUrl,
             name: chatName,
-            lastMessage: chat.messages.at(-1) || null,
-            lastMessageDate: chat.messages.at(-1)?.createdAt || null,
+            lastMessage: lastMessage || null,
+            lastMessageDate: lastMessage?.createdAt || null,
             chatId: chat.id,
             lengthUnread: lengthUnread,
             isOnline: isDialog ? member?.user.isOnline : undefined,

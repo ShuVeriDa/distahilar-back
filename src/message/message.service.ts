@@ -404,6 +404,9 @@ export class MessageService {
           deletedByUsers: {
             has: userId,
           },
+          readByUsers: {
+            has: userId,
+          },
         },
         chat: {
           members: {

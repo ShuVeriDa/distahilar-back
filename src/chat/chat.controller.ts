@@ -75,6 +75,6 @@ export class ChatController {
     @Param('id') chatId: string,
     @User('id') userId: string,
   ) {
-    return await this.chatService.deleteChat(dto, chatId, userId);
+    return await this.chatService.deleteChat(chatId, dto, userId);
   }
 }
