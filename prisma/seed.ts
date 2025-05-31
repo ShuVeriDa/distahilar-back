@@ -2,6 +2,7 @@ import { ChatRole, PrismaClient } from '@prisma/client';
 import * as dotenv from 'dotenv';
 import { createChatForTestUser, createChats } from './helpers/chatHelper';
 import {
+  addReactions,
   createContacts,
   createTestUser,
   createUsers,
@@ -30,6 +31,8 @@ async function up() {
   for (let i = 0; i < FAKER_ROUNDS_CHATS_GROUP; i++) {
     await createChats(ChatRole.GROUP, i);
   }
+
+  await addReactions();
 }
 
 async function down() {

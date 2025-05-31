@@ -227,6 +227,7 @@ model VideoMessage {
 model Reaction {
   id    String @id @default(uuid())
   emoji String
+  count Int    @default(1)
 
   messageId String
   message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)

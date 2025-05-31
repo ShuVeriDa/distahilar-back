@@ -623,6 +623,11 @@ export class MessageService {
         include: {
           user: true,
           chat: true,
+          reactions: {
+            include: {
+              user: true,
+            },
+          },
         },
         orderBy: {
           createdAt: 'asc',
@@ -635,6 +640,11 @@ export class MessageService {
         include: {
           user: true,
           chat: true,
+          reactions: {
+            include: {
+              user: true,
+            },
+          },
         },
         orderBy: {
           createdAt: 'asc',
@@ -679,6 +689,11 @@ export class MessageService {
           videoMessages: true,
           voiceMessages: true,
           user: true,
+          reactions: {
+            include: {
+              user: true,
+            },
+          },
         },
         orderBy: {
           createdAt: 'asc',
@@ -711,6 +726,11 @@ export class MessageService {
           videoMessages: true,
           voiceMessages: true,
           user: true,
+          reactions: {
+            include: {
+              user: true,
+            },
+          },
         },
         orderBy: {
           createdAt: 'asc',

@@ -161,3 +161,58 @@ export const createContacts = async () => {
     });
   }
 };
+
+export const addReactions = async () => {
+  const chat = await prisma.chat.findFirst({
+    where: {
+      name: 'K1amelan gullam',
+    },
+    include: {
+      members: true,
+      messages: true,
+    },
+  });
+
+  const members = await prisma.chatMember.findMany({
+    where: {
+      chatId: chat.id,
+    },
+  });
+
+  const messages = await prisma.message.findMany({
+    where: {
+      chatId: chat.id,
+    },
+  });
+
+  for (const [index, member] of members.entries()) {
+    await prisma.message.update({
+      where: {
+        id: messages[0].id,
+      },
+      data: {
+        reactions: {
+          create: {
+            emoji:
+              index < 20
+                ? '👍'
+                : index > 20 && index < 30
+                  ? '🤣'
+                  : index > 30 && index < 60
+                    ? '🤮'
+                    : '👎',
+            user: {
+              connect: {
+                id: member.userId,
+              },
+            },
+          },
+        },
+      },
+      include: {
+        reactions: true,
+        user: true,
+      },
+    });
+  }
+};
