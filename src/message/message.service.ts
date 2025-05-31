@@ -625,7 +625,7 @@ export class MessageService {
           chat: true,
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: 'asc',
         },
       });
     } else {
@@ -637,7 +637,7 @@ export class MessageService {
           chat: true,
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: 'asc',
         },
       });
     }
