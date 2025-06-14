@@ -2,7 +2,6 @@ import { ChatRole, PrismaClient } from '@prisma/client';
 import * as dotenv from 'dotenv';
 import { createChatForTestUser, createChats } from './helpers/chatHelper';
 import {
-  addReactions,
   createContacts,
   createTestUser,
   createUsers,
@@ -32,7 +31,7 @@ async function up() {
     await createChats(ChatRole.GROUP, i);
   }
 
-  await addReactions();
+  // await addReactions();
 }
 
 async function down() {
@@ -46,6 +45,7 @@ async function down() {
   await prisma.$executeRaw`TRUNCATE TABLE "voice_messages" RESTART IDENTITY CASCADE`;
   await prisma.$executeRaw`TRUNCATE TABLE "video_messages" RESTART IDENTITY CASCADE`;
   await prisma.$executeRaw`TRUNCATE TABLE "reactions" RESTART IDENTITY CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "reaction_users" RESTART IDENTITY CASCADE`;
   await prisma.$executeRaw`TRUNCATE TABLE "folders" RESTART IDENTITY CASCADE`;
   await prisma.$executeRaw`TRUNCATE TABLE "audit_logs" RESTART IDENTITY CASCADE`;
 }

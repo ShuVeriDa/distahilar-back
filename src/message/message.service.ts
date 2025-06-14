@@ -625,7 +625,11 @@ export class MessageService {
           chat: true,
           reactions: {
             include: {
-              user: true,
+              users: {
+                include: {
+                  user: true,
+                },
+              },
             },
           },
         },
@@ -642,7 +646,11 @@ export class MessageService {
           chat: true,
           reactions: {
             include: {
-              user: true,
+              users: {
+                include: {
+                  user: true,
+                },
+              },
             },
           },
         },
@@ -691,7 +699,11 @@ export class MessageService {
           user: true,
           reactions: {
             include: {
-              user: true,
+              users: {
+                include: {
+                  user: true,
+                },
+              },
             },
           },
         },
@@ -728,7 +740,11 @@ export class MessageService {
           user: true,
           reactions: {
             include: {
-              user: true,
+              users: {
+                include: {
+                  user: true,
+                },
+              },
             },
           },
         },

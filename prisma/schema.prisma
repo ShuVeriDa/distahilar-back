@@ -28,10 +28,10 @@ model User {
 
   settings UserSettings?
 
-  messages  Message[]
-  reactions Reaction[]
-  folders   Folder[]
-  AuditLog  AuditLog[]
+  messages      Message[]
+  reactionUsers ReactionUser[] // заменили reactions → reactionUsers
+  folders       Folder[]
+  AuditLog      AuditLog[]
 
   lastSeen DateTime? @default(now())
   isOnline Boolean   @default(false)
@@ -232,11 +232,23 @@ model Reaction {
   messageId String
   message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
+  users ReactionUser[]
+
+  @@unique([messageId, emoji]) // Один тип реакции на сообщение
+  @@map("reactions")
+}
+
+model ReactionUser {
+  id String @id @default(uuid())
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([messageId, userId])
-  @@map("reactions")
+  reactionId String
+  reaction   Reaction @relation(fields: [reactionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reactionId]) // Один пользователь может поставить только одну конкретную реакцию
+  @@map("reaction_users")
 }
 
 // Папки для чатов

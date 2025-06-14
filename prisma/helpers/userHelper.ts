@@ -162,7 +162,7 @@ export const createContacts = async () => {
   }
 };
 
-export const addReactions = async () => {
+export const addReactions = async (i = 0) => {
   const chat = await prisma.chat.findFirst({
     where: {
       name: 'K1amelan gullam',
@@ -186,33 +186,63 @@ export const addReactions = async () => {
   });
 
   for (const [index, member] of members.entries()) {
-    await prisma.message.update({
+    const emojiValue =
+      index < 20
+        ? '👍'
+        : index > 20 && index < 30
+          ? '🤣'
+          : index > 30 && index < 60
+            ? '🤮'
+            : '👎';
+
+    const existingReaction = await prisma.reaction.findUnique({
       where: {
-        id: messages[0].id,
+        messageId_emoji: {
+          messageId: messages[i].id,
+          emoji: emojiValue,
+        },
       },
-      data: {
-        reactions: {
-          create: {
-            emoji:
-              index < 20
-                ? '👍'
-                : index > 20 && index < 30
-                  ? '🤣'
-                  : index > 30 && index < 60
-                    ? '🤮'
-                    : '👎',
-            user: {
-              connect: {
-                id: member.userId,
+      include: { users: true },
+    });
+
+    if (existingReaction) {
+      // Проверяем, есть ли уже такая связь с user
+      const userAlreadyReacted = existingReaction.users.some(
+        (u) => u.userId === member.userId,
+      );
+
+      if (!userAlreadyReacted) {
+        await prisma.reaction.update({
+          where: { id: existingReaction.id },
+          data: {
+            count: { increment: 1 },
+            users: {
+              create: {
+                user: {
+                  connect: { id: member.userId },
+                },
+              },
+            },
+          },
+        });
+      }
+    } else {
+      // Создаём новую реакцию и привязываем user
+      await prisma.reaction.create({
+        data: {
+          emoji: emojiValue,
+          message: {
+            connect: { id: messages[i].id },
+          },
+          users: {
+            create: {
+              user: {
+                connect: { id: member.userId },
               },
             },
           },
         },
-      },
-      include: {
-        reactions: true,
-        user: true,
-      },
-    });
+      });
+    }
   }
 };

@@ -4,7 +4,10 @@ import { addReactions } from './helpers/userHelper';
 const prisma = new PrismaClient();
 
 async function up() {
-  await addReactions();
+  await addReactions(0);
+  await addReactions(1);
+  await addReactions(2);
+  await addReactions(3);
 }
 
 async function down() {

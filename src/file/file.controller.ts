@@ -52,6 +52,8 @@ export class FileController {
     file: Express.Multer.File,
     @Query('folder') folder?: string,
   ) {
+    console.log({ file });
+
     try {
       return await this.fileService.saveFiles(file, folder);
     } catch (error) {
