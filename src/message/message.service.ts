@@ -484,66 +484,6 @@ export class MessageService {
         return [message];
       }
     }
-
-    // const results = await Promise.all(
-    //   dto.messageIds.map(async (id) => {
-    //     const { chat, message, isMessageOwner, isModerator, isAdmin, isOwner } =
-    //       await this.validateMessage(dto.chatId, id, userId);
-
-    //     if (chat.type === ChatRole.DIALOG) {
-    //       return await this.deleteMessageForOwnerMessage(
-    //         dto.delete_both,
-    //         isMessageOwner,
-    //         message.id,
-    //         chat.id,
-    //         userId,
-    //       );
-    //     } else {
-    //       if (!isMessageOwner && !isModerator && !isAdmin && !isOwner) {
-    //         throw new ForbiddenException(
-    //           "You don't have permission to delete this message",
-    //         );
-    //       }
-
-    //       if (isMessageOwner) {
-    //         return await this.deleteMessageForOwnerMessage(
-    //           dto.delete_both,
-    //           isMessageOwner,
-    //           message.id,
-    //           chat.id,
-    //           userId,
-    //         );
-    //       }
-
-    //       if (isOwner || isAdmin || isModerator) {
-    //         return await this.prisma.message.delete({
-    //           where: {
-    //             id: message.id,
-    //             chatId: chat.id,
-    //             chat: {
-    //               members: {
-    //                 some: {
-    //                   role: {
-    //                     in: [
-    //                       MemberRole.OWNER,
-    //                       MemberRole.ADMIN,
-    //                       MemberRole.MODERATOR,
-    //                     ],
-    //                   },
-    //                 },
-    //               },
-    //             },
-    //           },
-    //           include: {
-    //             chat: true,
-    //           },
-    //         });
-    //       }
-    //     }
-    //   }),
-    // );
-
-    // return results;
   }
 
   //Pin a message

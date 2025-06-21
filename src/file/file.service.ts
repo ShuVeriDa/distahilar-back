@@ -51,30 +51,20 @@ export class FileService {
   }
 
   async saveFiles(
-    file: Express.Multer.File,
+    files: Express.Multer.File[],
     folder = 'default',
-  ): Promise<{ url: string; size: number; duration?: number }> {
-    const result = await this.uploadToCloudinary(file, folder);
+  ): Promise<{ url: string; size: number; duration?: number }[]> {
+    const results = [];
 
-    return {
-      url: result.secure_url,
-      size: result.bytes,
-      duration: result?.duration,
-    };
+    for (const file of files) {
+      const result = await this.uploadToCloudinary(file, folder);
+      results.push({
+        url: result.secure_url,
+        size: result.bytes,
+        duration: result?.duration,
+      });
+    }
+
+    return results;
   }
-
-  // async saveFiles(
-  //   file: Express.Multer.File,
-  //   folder = 'default',
-  // ): Promise<{ url: string }> {
-  //   const uploadFolder = `${path}/uploads/${folder}`;
-
-  //   await ensureDir(uploadFolder); // проверяет наличии папки, если она отсутствует, то создает ее.
-
-  //   await writeFile(`${uploadFolder}/${file.originalname}`, file.buffer);
-
-  //   return {
-  //     url: `/uploads/${folder}/${file.originalname}`,
-  //   };
-  // }
 }

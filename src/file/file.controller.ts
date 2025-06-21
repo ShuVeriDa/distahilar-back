@@ -5,10 +5,10 @@ import {
   ParseFilePipeBuilder,
   Post,
   Query,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { FileService } from './file.service';
 import { CustomUploadFileTypeValidator } from './file.validators';
@@ -37,9 +37,9 @@ export class FileController {
   constructor(private readonly fileService: FileService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FilesInterceptor('files', 10)) // Максимум 10 файлов
   public async uploadFile(
-    @UploadedFile(
+    @UploadedFiles(
       new ParseFilePipeBuilder()
         .addValidator(
           new CustomUploadFileTypeValidator({
@@ -49,13 +49,13 @@ export class FileController {
         .addMaxSizeValidator({ maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES })
         .build({ errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY }),
     )
-    file: Express.Multer.File,
+    files: Express.Multer.File[],
     @Query('folder') folder?: string,
   ) {
-    console.log({ file });
+    console.log({ files });
 
     try {
-      return await this.fileService.saveFiles(file, folder);
+      return await this.fileService.saveFiles(files, folder);
     } catch (error) {
       throw new BadRequestException(error.message || 'File upload failed.');
     }

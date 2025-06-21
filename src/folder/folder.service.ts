@@ -60,7 +60,7 @@ export class FolderService {
 
           const lengthUnread = visibleMessages.filter(
             (obj) =>
-              obj.userId === member.userId &&
+              obj.userId === member?.userId &&
               obj.readByUsers.some((id) => id === userId),
           ).length;
 
