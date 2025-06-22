@@ -16,7 +16,7 @@ export class CreateMessageDto {
 
   @ApiProperty()
   @IsString()
-  content: string;
+  content?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

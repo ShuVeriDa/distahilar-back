@@ -76,8 +76,7 @@ export class MessageService {
   }
 
   async createMessage(dto: CreateMessageDto, userId: string) {
-    if (!dto.content || !dto.chatId)
-      throw new NotFoundException('Content or ChatId not found');
+    if (!dto.chatId) throw new NotFoundException('Content or ChatId not found');
 
     const chat = await this.validateChat(dto.chatId);
 
@@ -196,6 +195,7 @@ export class MessageService {
             create: {
               type: dto.mediaType,
               url: dto.url,
+              size: dto.size,
             },
           },
           readByUsers: {
