@@ -170,6 +170,7 @@ model Media {
   url      String
   duration Int?
   size     Int?
+  name     String?
   type     MediaType
 
   messageId String?
@@ -283,7 +284,7 @@ model AuditLog {
 enum MediaType {
   IMAGE
   VIDEO
-  VOICE
+  AUDIO
   FILE
 }
 

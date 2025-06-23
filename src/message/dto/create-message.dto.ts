@@ -18,6 +18,10 @@ export class CreateMessageDto {
   @IsString()
   content?: string;
 
+  @ApiProperty()
+  @IsString()
+  name?: string;
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()

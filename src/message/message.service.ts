@@ -196,6 +196,7 @@ export class MessageService {
               type: dto.mediaType,
               url: dto.url,
               size: dto.size,
+              name: dto.name,
             },
           },
           readByUsers: {
@@ -563,6 +564,7 @@ export class MessageService {
         include: {
           user: true,
           chat: true,
+          media: true,
           reactions: {
             include: {
               users: {
@@ -584,6 +586,7 @@ export class MessageService {
         include: {
           user: true,
           chat: true,
+          media: true,
           reactions: {
             include: {
               users: {
@@ -636,6 +639,7 @@ export class MessageService {
           chat: true,
           videoMessages: true,
           voiceMessages: true,
+          media: true,
           user: true,
           reactions: {
             include: {
@@ -678,6 +682,7 @@ export class MessageService {
           videoMessages: true,
           voiceMessages: true,
           user: true,
+          media: true,
           reactions: {
             include: {
               users: {

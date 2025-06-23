@@ -24,6 +24,11 @@ export class UpdateMessageDto {
   @IsString()
   content?: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
   //This id for mediaId or videoMessageId or voiceMessageId or fileId
   @ApiProperty({ required: false })
   @IsOptional()
