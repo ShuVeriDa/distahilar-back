@@ -13,7 +13,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { FileService } from './file.service';
 import { CustomUploadFileTypeValidator } from './file.validators';
 
-const MAX_PROFILE_PICTURE_SIZE_IN_BYTES = 2 * 1024 * 1024;
+const MAX_PROFILE_PICTURE_SIZE_IN_BYTES = 10 * 1024 * 1024;
 const VALID_UPLOADS_MIME_TYPES = [
   // Изображения
   'image/jpeg',

@@ -66,8 +66,6 @@ export class FileService {
   > {
     const results = [];
 
-    console.log({ results });
-
     for (const file of files) {
       const result = await this.uploadToCloudinary(file, folder);
       console.log({ file, result });
