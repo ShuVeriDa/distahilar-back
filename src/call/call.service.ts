@@ -23,12 +23,18 @@ export class CallService {
     const { roomName, apiKey, apiSecret, chat, isSuccess } =
       await this.validateRoom(roomId, userId);
 
-    const expiresIn = 60 * 60; // 1 час в секундах
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    const expiresIn = 60 * 60;
     const expiresAt = Date.now() + expiresIn * 1000;
 
     const roomObj = {
-      identity: `user:${userId}`,
-      name: roomName,
+      identity: user.username,
+      name: user.username,
       ttl: expiresAt,
     };
 
@@ -39,19 +45,42 @@ export class CallService {
     };
 
     if (chat.type === ChatRole.DIALOG) {
-      // Проверка существования комнаты с использованием listRooms
       const rooms = await this.roomService.listRooms([roomName]);
       const roomExists = rooms.length > 0;
 
-      // Если комната не существует, создаем её
       if (!roomExists) {
         await this.createRoom(roomName, 2);
         console.log('Room created successfully');
       } else {
-        console.log('Room already exists');
+        try {
+          const participants =
+            await this.roomService.listParticipants(roomName);
+          console.log(`Room has ${participants.length} participants`);
+
+          if (participants.length >= 2) {
+            const currentUserExists = participants.some(
+              (p) => p.identity === user.username,
+            );
+
+            if (!currentUserExists) {
+              console.log('Room full, cleaning up participants...');
+              // Используем cleanupRoom метод
+              await this.cleanupRoom(roomName);
+            }
+          }
+        } catch (error) {
+          console.log('Error checking participants:', error.message);
+          try {
+            await this.roomService.deleteRoom(roomName);
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            await this.createRoom(roomName, 2);
+            console.log('Room recreated after cleanup');
+          } catch (recreateError) {
+            console.log('Failed to recreate room:', recreateError.message);
+          }
+        }
       }
 
-      // Возврат токена для диалога
       return {
         token: await generateToken({
           room: roomName,
@@ -71,6 +100,33 @@ export class CallService {
       };
 
       return { token: await generateToken(grants) };
+    }
+  }
+
+  private async cleanupRoom(roomName: string): Promise<void> {
+    try {
+      const participants = await this.roomService.listParticipants(roomName);
+
+      // Удаляем всех участников
+      for (const participant of participants) {
+        try {
+          await this.roomService.removeParticipant(
+            roomName,
+            participant.identity,
+          );
+          console.log(`Removed participant: ${participant.identity}`);
+        } catch (error) {
+          console.log(
+            `Failed to remove participant ${participant.identity}:`,
+            error.message,
+          );
+        }
+      }
+
+      // Ждем завершения удаления
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } catch (error) {
+      console.log('Error during room cleanup:', error.message);
     }
   }
 
