@@ -16,7 +16,8 @@ export const UserWs = createParamDecorator(
   (data: keyof UserPrisma, context: ExecutionContext) => {
     const client = context.switchToWs().getClient();
 
-    const token = client.handshake.headers.cookie.split('=')[1];
+    const token = getCookie('refreshToken', client.handshake.headers.cookie);
+    console.log({ token });
 
     const jwtService = new JwtService(); // Создаем новый экземпляр сервиса JWT
 
@@ -27,3 +28,11 @@ export const UserWs = createParamDecorator(
     return data ? decoded[data] : decoded;
   },
 );
+
+function getCookie(name: string, cookieHeader?: string) {
+  const target = (cookieHeader || '')
+    .split(';')
+    .map((s) => s.trim())
+    .find((s) => s.startsWith(name + '='));
+  return target ? decodeURIComponent(target.slice(name.length + 1)) : undefined;
+}

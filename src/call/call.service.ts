@@ -1,147 +1,211 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { ChatRole, MemberRole } from '@prisma/client';
-import { AccessToken, RoomServiceClient, TrackType } from 'livekit-server-sdk';
 import { PrismaService } from 'src/prisma.service';
+
+import { v4 as uuidv4 } from 'uuid';
+import {
+  CallActionEnum,
+  CallEndDto,
+  CallNotification,
+  CallResponseDto,
+  CallStatus,
+  CallStatusEnum,
+  InitiateCallDto,
+} from './call.type';
 
 @Injectable()
 export class CallService {
-  private roomService: RoomServiceClient;
+  private activeCalls = new Map<string, CallStatus>(); // callId => CallStatus
+  private voiceRooms = new Map<string, Set<string>>(); // chatId => Set<userId>
 
-  constructor(private readonly prisma: PrismaService) {
-    const livekitUrl = this.getEnvVariable('LIVEKIT_URL');
-    const apiKey = this.getEnvVariable('LIVEKIT_API_KEY');
-    const apiSecret = this.getEnvVariable('LIVEKIT_API_SECRET');
+  constructor(private readonly prisma: PrismaService) {}
 
-    this.roomService = new RoomServiceClient(livekitUrl, apiKey, apiSecret);
+  // Инициация звонка (как в Telegram)
+  async initiateCall(dto: InitiateCallDto, callerId: string) {
+    const { chat, targetUserId } = await this.validateDialogCall(
+      dto.chatId,
+      callerId,
+    );
+
+    const callId = uuidv4();
+    const caller = await this.prisma.user.findUnique({
+      where: { id: callerId },
+      select: { username: true, id: true },
+    });
+
+    const callStatus: CallStatus = {
+      id: callId,
+      chatId: dto.chatId,
+      callerId,
+      participantIds: [callerId, targetUserId],
+      status: CallStatusEnum.INITIATED,
+      isVideoCall: dto.isVideoCall || false,
+      startedAt: new Date(),
+    };
+
+    this.activeCalls.set(callId, callStatus);
+
+    const notification: CallNotification = {
+      callId,
+      callerId,
+      callerName: caller.username,
+      chatId: dto.chatId,
+      chatName: chat.name,
+      isVideoCall: dto.isVideoCall || false,
+      timestamp: Date.now(),
+    };
+
+    // Автоматическое отклонение через 30 секунд
+    setTimeout(() => {
+      const call = this.activeCalls.get(callId);
+      if (call && call.status === CallStatusEnum.INITIATED) {
+        call.status = CallStatusEnum.ENDED;
+        call.endedAt = new Date();
+        this.activeCalls.delete(callId);
+      }
+    }, 30000);
+
+    return { callId, targetUserId, notification };
   }
 
-  async enterCallRoom(roomId: string, userId: string) {
-    const { roomName, apiKey, apiSecret, chat, isSuccess } =
-      await this.validateRoom(roomId, userId);
+  // Ответ на звонок
+  async respondToCall(dto: CallResponseDto, userId: string) {
+    const call = this.activeCalls.get(dto.callId);
 
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id: userId,
+    if (!call) {
+      throw new NotFoundException('Call not found or expired');
+    }
+
+    if (!call.participantIds.includes(userId)) {
+      throw new ForbiddenException('You are not part of this call');
+    }
+
+    if (call.status !== CallStatusEnum.INITIATED) {
+      throw new BadRequestException('Call is no longer available');
+    }
+
+    if (dto.action === CallActionEnum.REJECT) {
+      call.status = CallStatusEnum.ENDED;
+      call.endedAt = new Date();
+      this.activeCalls.delete(dto.callId);
+
+      return {
+        callId: dto.callId,
+        status: 'rejected',
+        callerId: call.callerId,
+        participantIds: call.participantIds,
+      };
+    } else if (dto.action === CallActionEnum.ACCEPT) {
+      call.status = CallStatusEnum.ACTIVE;
+
+      // Для WebRTC токены/комната не нужны. Клиенты установят P2P соединение через сигналинг
+      return {
+        callId: dto.callId,
+        status: CallStatusEnum.ACTIVE,
+        callerId: call.callerId,
+        participantIds: call.participantIds,
+      };
+    }
+  }
+
+  // Завершение звонка
+  async endCall(dto: CallEndDto, userId: string) {
+    const call = this.activeCalls.get(dto.callId);
+
+    if (!call) {
+      throw new NotFoundException('Call not found');
+    }
+
+    if (!call.participantIds.includes(userId)) {
+      throw new ForbiddenException('You are not part of this call');
+    }
+
+    call.status = CallStatusEnum.ENDED;
+    call.endedAt = new Date();
+    this.activeCalls.delete(dto.callId);
+
+    return {
+      callId: dto.callId,
+      status: 'ended',
+      endedBy: userId,
+      participantIds: call.participantIds,
+    };
+  }
+
+  // Присоединение к голосовому чату группы/канала (WebRTC, без медиасервера)
+  async joinVoiceChat(chatId: string, userId: string) {
+    const { chat } = await this.validateRoom(chatId, userId);
+
+    if (!this.voiceRooms.has(chat.id)) {
+      this.voiceRooms.set(chat.id, new Set());
+    }
+    const participants = this.voiceRooms.get(chat.id);
+    participants.add(userId);
+
+    return { chatId: chat.id, participants: Array.from(participants) };
+  }
+
+  async leaveVoiceChat(chatId: string, userId: string) {
+    const { chat } = await this.validateRoom(chatId, userId);
+    const participants = this.voiceRooms.get(chat.id);
+    if (participants) {
+      participants.delete(userId);
+      if (participants.size === 0) {
+        this.voiceRooms.delete(chat.id);
+      }
+    }
+    return {
+      chatId: chat.id,
+      participants: participants ? Array.from(participants) : [],
+    };
+  }
+
+  // Валидация диалога для звонка
+  private async validateDialogCall(chatId: string, callerId: string) {
+    const chat = await this.prisma.chat.findFirst({
+      where: { id: chatId },
+      include: {
+        members: {
+          include: { user: true },
+        },
       },
     });
 
-    const expiresIn = 60 * 60;
-    const expiresAt = Date.now() + expiresIn * 1000;
-
-    const roomObj = {
-      identity: user.username,
-      name: user.username,
-      ttl: expiresAt,
-    };
-
-    const generateToken = async (grants: object) => {
-      const at = new AccessToken(apiKey, apiSecret, roomObj);
-      at.addGrant(grants);
-      return await at.toJwt();
-    };
-
-    if (chat.type === ChatRole.DIALOG) {
-      const rooms = await this.roomService.listRooms([roomName]);
-      const roomExists = rooms.length > 0;
-
-      if (!roomExists) {
-        await this.createRoom(roomName, 2);
-        console.log('Room created successfully');
-      } else {
-        try {
-          const participants =
-            await this.roomService.listParticipants(roomName);
-          console.log(`Room has ${participants.length} participants`);
-
-          if (participants.length >= 2) {
-            const currentUserExists = participants.some(
-              (p) => p.identity === user.username,
-            );
-
-            if (!currentUserExists) {
-              console.log('Room full, cleaning up participants...');
-              // Используем cleanupRoom метод
-              await this.cleanupRoom(roomName);
-            }
-          }
-        } catch (error) {
-          console.log('Error checking participants:', error.message);
-          try {
-            await this.roomService.deleteRoom(roomName);
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            await this.createRoom(roomName, 2);
-            console.log('Room recreated after cleanup');
-          } catch (recreateError) {
-            console.log('Failed to recreate room:', recreateError.message);
-          }
-        }
-      }
-
-      return {
-        token: await generateToken({
-          room: roomName,
-          roomJoin: true,
-          canPublish: true,
-          canSubscribe: true,
-        }),
-      };
-    } else {
-      // Генерация токена для других типов чатов
-      const grants = {
-        room: roomName,
-        roomJoin: true,
-        canPublish: true,
-        canSubscribe: true,
-        ...(isSuccess && { roomAdmin: true }), // Добавляем roomAdmin только если isSuccess === true
-      };
-
-      return { token: await generateToken(grants) };
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
     }
+
+    if (chat.type !== ChatRole.DIALOG) {
+      throw new BadRequestException(
+        'Direct calls are only available for dialogs',
+      );
+    }
+
+    if (chat.members.length !== 2) {
+      throw new BadRequestException('Dialog must have exactly 2 members');
+    }
+
+    const callerMember = chat.members.find((m) => m.userId === callerId);
+    if (!callerMember) {
+      throw new ForbiddenException('You are not a member of this chat');
+    }
+
+    const targetUserId = chat.members.find(
+      (m) => m.userId !== callerId,
+    )?.userId;
+    if (!targetUserId) {
+      throw new NotFoundException('Target user not found');
+    }
+
+    return { chat, targetUserId };
   }
 
-  private async cleanupRoom(roomName: string): Promise<void> {
-    try {
-      const participants = await this.roomService.listParticipants(roomName);
-
-      // Удаляем всех участников
-      for (const participant of participants) {
-        try {
-          await this.roomService.removeParticipant(
-            roomName,
-            participant.identity,
-          );
-          console.log(`Removed participant: ${participant.identity}`);
-        } catch (error) {
-          console.log(
-            `Failed to remove participant ${participant.identity}:`,
-            error.message,
-          );
-        }
-      }
-
-      // Ждем завершения удаления
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    } catch (error) {
-      console.log('Error during room cleanup:', error.message);
-    }
-  }
-
-  private async createRoom(roomName: string, maxParticipants: number) {
-    try {
-      await this.roomService.createRoom({
-        name: roomName,
-        emptyTimeout: 300, // Время ожидания перед удалением комнаты, если она пуста (в секундах)
-        maxParticipants: maxParticipants, // Ограничение на двух участников для диалога
-      });
-      console.log(`Room ${roomName} created`);
-    } catch (error) {
-      throw new ForbiddenException('Не удалось создать комнату');
-    }
-  }
+  // Ниже — оставшиеся утилиты для формирования имени (если понадобится в UI)
 
   private getRoomName(chat): string {
     switch (chat.type) {
@@ -156,74 +220,11 @@ export class CallService {
     }
   }
 
-  private getEnvVariable(variable: string): string {
-    const value = process.env[variable];
-    if (!value) {
-      throw new ForbiddenException(
-        `Environment variable ${variable} is not set`,
-      );
-    }
-    return value;
-  }
-
-  // Метод для исключения пользователя из комнаты
-  async kickUser(roomName: string, userId: string) {
-    try {
-      await this.roomService.removeParticipant(roomName, `user:${userId}`);
-
-      console.log({ success: 'User kicked successfully' });
-
-      return { message: 'User kicked successfully' };
-    } catch (error) {
-      throw new ForbiddenException('Не удалось исключить пользователя');
-    }
-  }
-
-  async muteUser(roomName: string, userId: string, isMuted: boolean) {
-    try {
-      // Получение информации об участнике, чтобы найти trackSid
-      const participantInfo = await this.roomService.getParticipant(
-        roomName,
-        `user:${userId}`,
-      );
-
-      if (!participantInfo) {
-        throw new NotFoundException('Участник не найден в комнате');
-      }
-
-      // Предположим, что мы хотим управлять первым аудиотреком
-      const audioTrack = participantInfo.tracks.find(
-        (track) => track.type === TrackType.AUDIO,
-      );
-
-      if (!audioTrack) {
-        throw new NotFoundException('Аудиотрек не найден');
-      }
-
-      await this.roomService.mutePublishedTrack(
-        roomName,
-        `user:${userId}`,
-        audioTrack.sid,
-        isMuted,
-      );
-
-      const action = isMuted ? 'muted' : 'unmuted';
-
-      console.log({ success: `User ${action} successfully` });
-
-      return { message: `User ${action} successfully` };
-    } catch (error) {
-      throw new ForbiddenException(
-        'Не удалось изменить статус mute для пользователя',
-      );
-    }
-  }
+  // Удалены зависимости от переменных окружения медиасервера
 
   private async validateRoom(roomId: string, userId: string) {
     const chat = await this.prisma.chat.findFirst({
-      where: {
-        id: roomId,
-      },
+      where: { id: roomId },
     });
 
     if (!chat) throw new NotFoundException('Chat not found');
@@ -247,14 +248,25 @@ export class CallService {
       member.role === MemberRole.MODERATOR;
 
     const roomName = this.getRoomName(chat);
+    return { roomName, chat, isSuccess };
+  }
 
-    const apiKey = this.getEnvVariable('LIVEKIT_API_KEY');
-    const apiSecret = this.getEnvVariable('LIVEKIT_API_SECRET');
-    const wsUrl = this.getEnvVariable('LIVEKIT_URL');
+  // Методы для управления участниками (как в оригинале)
+  async kickUser(roomName: string, userId: string) {
+    // Без медиасервера кик означает удалить из набора участников
+    const participants = this.voiceRooms.get(roomName);
+    if (!participants) throw new NotFoundException('Комната не найдена');
+    participants.delete(userId);
+    return { message: 'User kicked successfully' };
+  }
 
-    if (!apiKey || !apiSecret || !wsUrl)
-      throw new ForbiddenException('Server misconfigured');
-
-    return { roomName, apiKey, apiSecret, wsUrl, chat, isSuccess };
+  async muteUser(roomName: string, userId: string, isMuted: boolean) {
+    // На P2P mute обрабатывается на клиенте. Здесь можно только валидировать членство.
+    const participants = this.voiceRooms.get(roomName);
+    if (!participants || !participants.has(userId)) {
+      throw new NotFoundException('Участник не найден в комнате');
+    }
+    const action = isMuted ? 'muted' : 'unmuted';
+    return { message: `User ${action} successfully` };
   }
 }

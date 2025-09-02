@@ -1,11 +1,11 @@
 import { ChatRole, PrismaClient } from '@prisma/client';
 import * as dotenv from 'dotenv';
-import { createChatForTestUser, createChats } from './helpers/chatHelper';
 import {
   createContacts,
   createTestUser,
   createUsers,
-} from './helpers/userHelper';
+} from './helpers//userHelper';
+import { createChatForTestUser, createChats } from './helpers/chatHelper';
 
 const prisma = new PrismaClient();
 

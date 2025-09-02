@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
-import { CallController } from './call.controller';
+import { CallGateway } from './call.gateway';
 import { CallService } from './call.service';
 
 @Module({
-  controllers: [CallController],
-  providers: [CallService, PrismaService],
+  controllers: [],
+  providers: [CallService, PrismaService, CallGateway, JwtService],
 })
 export class CallModule {}

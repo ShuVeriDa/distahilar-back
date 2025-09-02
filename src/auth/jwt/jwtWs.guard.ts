@@ -12,8 +12,9 @@ export class AuthGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToWs().getClient().handshake;
-    const token = request.headers.cookie.split('=')[1];
+    const client = context.switchToWs().getClient();
+    const cookieHeader: string = client?.handshake?.headers?.cookie || '';
+    const token = getCookie('refreshToken', cookieHeader);
 
     if (!token) {
       return false; // No token provided
@@ -26,7 +27,17 @@ export class AuthGuard implements CanActivate {
 
       return !!decoded;
     } catch (err) {
+      console.log({ err });
+
       throw new UnauthorizedException(err); // Token verification failed
     }
   }
+}
+
+function getCookie(name: string, cookieHeader?: string) {
+  const target = (cookieHeader || '')
+    .split(';')
+    .map((s) => s.trim())
+    .find((s) => s.startsWith(name + '='));
+  return target ? decodeURIComponent(target.slice(name.length + 1)) : undefined;
 }
