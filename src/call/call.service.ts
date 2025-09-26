@@ -245,8 +245,23 @@ export class CallService {
     state.muted = state.muted.filter((id) => id !== userId);
 
     if (state.hostId === userId) {
-      // Host leaving ends the live
-      state.isLive = false;
+      // Host leaves: do NOT end live. Transfer host if possible; end only if no one remains
+      const nextSpeaker = state.speakers[0];
+      if (nextSpeaker) {
+        state.hostId = nextSpeaker;
+      } else if (state.listeners.length > 0) {
+        const promoted = state.listeners.shift();
+        if (promoted) {
+          state.hostId = promoted;
+          if (!state.speakers.includes(promoted)) state.speakers.push(promoted);
+          // ensure promoted user is not muted by default
+          state.muted = state.muted.filter((id) => id !== promoted);
+        }
+      } else {
+        // No one left to hold the live — end it
+        state.isLive = false;
+        state.hostId = null;
+      }
     }
     this.liveRooms.set(chat.id, state);
     return state;
