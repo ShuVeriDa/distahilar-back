@@ -78,3 +78,93 @@ export class JoinVoiceChatDto {
 export class LeaveVoiceChatDto {
   chatId: string;
 }
+
+// Live stream / voice room (groups & channels)
+
+export enum LiveRoleEnum {
+  HOST = 'host',
+  SPEAKER = 'speaker',
+  LISTENER = 'listener',
+}
+
+export interface LiveRoomState {
+  chatId: string;
+  isLive: boolean;
+  hostId: string | null;
+  speakers: string[];
+  listeners: string[];
+  raisedHands: string[];
+  muted: string[];
+  startedAt?: number;
+}
+
+export class StartLiveDto {
+  chatId: string;
+}
+
+export class StopLiveDto {
+  chatId: string;
+}
+
+export class JoinLiveDto {
+  chatId: string;
+}
+
+export class LeaveLiveDto {
+  chatId: string;
+}
+
+export class RaiseHandDto {
+  chatId: string;
+}
+
+export class ApproveSpeakerDto {
+  chatId: string;
+  userId: string; // target user to promote
+}
+
+export class RevokeSpeakerDto {
+  chatId: string;
+  userId: string; // target user to demote
+}
+
+export class ToggleMuteDto {
+  chatId: string;
+  userId: string; // target user to mute/unmute
+  isMuted: boolean;
+}
+
+export class GetLiveRoomStateDto {
+  chatId: string;
+}
+
+// Live WebRTC signaling DTOs (for groups/channels live streams)
+export class LiveWebRtcOfferDto {
+  chatId: string;
+  toUserId: string;
+  sdp: string;
+  type: CallTypeEnum.OFFER;
+}
+
+export class LiveWebRtcAnswerDto {
+  chatId: string;
+  toUserId: string;
+  sdp: string;
+  type: CallTypeEnum.ANSWER;
+}
+
+export class LiveWebRtcIceCandidateDto {
+  chatId: string;
+  toUserId: string;
+  candidate: any;
+}
+
+export class GetLivePeersDto {
+  chatId: string;
+}
+
+export interface LivePeerInfo {
+  userId: string;
+  role: LiveRoleEnum;
+  isMuted: boolean;
+}
