@@ -1,5 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import {
+  ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -270,6 +271,37 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return state;
   }
 
+  // Join/leave Socket.IO chat room (for watchers to receive broadcasts)
+  @SubscribeMessage('joinChat')
+  @AuthWS()
+  async joinChat(
+    @MessageBody() payload: { chatId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    if (!payload?.chatId) return { ok: false };
+    try {
+      await client.join(payload.chatId);
+      return { ok: true };
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  @SubscribeMessage('leaveChat')
+  @AuthWS()
+  async leaveChat(
+    @MessageBody() payload: { chatId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    if (!payload?.chatId) return { ok: false };
+    try {
+      await client.leave(payload.chatId);
+      return { ok: true };
+    } catch {
+      return { ok: false };
+    }
+  }
+
   // Live WebRTC signaling within live room
   @SubscribeMessage('liveWebrtcOffer')
   @AuthWS()
@@ -406,8 +438,11 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (state.hostId) audience.add(state.hostId);
     (state.speakers || []).forEach((id: string) => audience.add(id));
     (state.listeners || []).forEach((id: string) => audience.add(id));
-    (state.raisedHands || []).forEach((id: string) => audience.add(id));
     audience.forEach((userId) => this.emitToUser(userId, 'liveState', state));
+    // Also broadcast to the Socket.IO room for this chat so watchers (non-participants) receive updates
+    if (this.server && state.chatId) {
+      this.server.to(state.chatId).emit('liveState', state);
+    }
   }
 
   private extractUserId(client: Socket): string | null {

@@ -87,15 +87,23 @@ export enum LiveRoleEnum {
   LISTENER = 'listener',
 }
 
+export interface LiveParticipant {
+  userId: string;
+  name?: string;
+  imageUrl?: string;
+  role: LiveRoleEnum;
+  isMuted: boolean;
+}
+
 export interface LiveRoomState {
   chatId: string;
   isLive: boolean;
   hostId: string | null;
   speakers: string[];
   listeners: string[];
-  raisedHands: string[];
   muted: string[];
   startedAt?: number;
+  participants?: LiveParticipant[];
 }
 
 export class StartLiveDto {

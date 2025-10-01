@@ -16,6 +16,8 @@ import {
   CallStatus,
   CallStatusEnum,
   InitiateCallDto,
+  LiveParticipant,
+  LiveRoleEnum,
   LiveRoomState,
 } from './call.type';
 
@@ -24,6 +26,8 @@ export class CallService {
   private activeCalls = new Map<string, CallStatus>(); // callId => CallStatus
   private voiceRooms = new Map<string, Set<string>>(); // chatId => Set<userId>
   private liveRooms = new Map<string, LiveRoomState>(); // chatId => LiveRoomState
+  // Declared for TS; implementation is attached via prototype assignment at bottom
+  private enrichLiveState!: (state: LiveRoomState) => Promise<LiveRoomState>;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -185,7 +189,7 @@ export class CallService {
     }
     const existing = this.liveRooms.get(chat.id);
     if (existing && existing.isLive) {
-      return existing; // idempotent
+      return await this.enrichLiveState(existing);
     }
     const state: LiveRoomState = {
       chatId: chat.id,
@@ -193,12 +197,11 @@ export class CallService {
       hostId: userId,
       speakers: [userId],
       listeners: [],
-      raisedHands: [],
       muted: [],
       startedAt: Date.now(),
     };
     this.liveRooms.set(chat.id, state);
-    return state;
+    return await this.enrichLiveState(state);
   }
 
   async stopLive(chatId: string, userId: string): Promise<LiveRoomState> {
@@ -212,7 +215,7 @@ export class CallService {
     }
     state.isLive = false;
     this.liveRooms.set(chat.id, state);
-    return state;
+    return await this.enrichLiveState(state);
   }
 
   async joinLive(chatId: string, userId: string): Promise<LiveRoomState> {
@@ -222,14 +225,14 @@ export class CallService {
       throw new NotFoundException('Live stream is not active');
     }
     if (state.hostId === userId) {
-      return state;
+      return await this.enrichLiveState(state);
     }
     if (!state.speakers.includes(userId) && !state.listeners.includes(userId)) {
       state.listeners.push(userId);
     }
     // If user previously raised hand and rejoins, keep raisedHands as-is
     this.liveRooms.set(chat.id, state);
-    return state;
+    return await this.enrichLiveState(state);
   }
 
   async leaveLive(chatId: string, userId: string): Promise<LiveRoomState> {
@@ -241,7 +244,6 @@ export class CallService {
     // Remove user from all sets
     state.listeners = state.listeners.filter((id) => id !== userId);
     state.speakers = state.speakers.filter((id) => id !== userId);
-    state.raisedHands = state.raisedHands.filter((id) => id !== userId);
     state.muted = state.muted.filter((id) => id !== userId);
 
     if (state.hostId === userId) {
@@ -264,7 +266,7 @@ export class CallService {
       }
     }
     this.liveRooms.set(chat.id, state);
-    return state;
+    return await this.enrichLiveState(state);
   }
 
   async raiseHand(chatId: string, userId: string): Promise<LiveRoomState> {
@@ -279,11 +281,9 @@ export class CallService {
     if (!state.listeners.includes(userId)) {
       state.listeners.push(userId);
     }
-    if (!state.raisedHands.includes(userId)) {
-      state.raisedHands.push(userId);
-    }
+
     this.liveRooms.set(chat.id, state);
-    return state;
+    return await this.enrichLiveState(state);
   }
 
   async approveSpeaker(
@@ -309,14 +309,13 @@ export class CallService {
     if (!isMember) throw new NotFoundException('Target user is not a member');
 
     state.listeners = state.listeners.filter((id) => id !== targetUserId);
-    state.raisedHands = state.raisedHands.filter((id) => id !== targetUserId);
     if (!state.speakers.includes(targetUserId)) {
       state.speakers.push(targetUserId);
     }
     // On approve, unmute the user
     state.muted = state.muted.filter((id) => id !== targetUserId);
     this.liveRooms.set(chat.id, state);
-    return state;
+    return await this.enrichLiveState(state);
   }
 
   async revokeSpeaker(
@@ -341,7 +340,7 @@ export class CallService {
     }
     state.muted = state.muted.filter((id) => id !== targetUserId);
     this.liveRooms.set(chat.id, state);
-    return state;
+    return await this.enrichLiveState(state);
   }
 
   async toggleMute(
@@ -355,8 +354,11 @@ export class CallService {
     if (!state || !state.isLive) {
       throw new NotFoundException('Live stream is not active');
     }
-    if (!(isSuccess || state.hostId === moderatorId)) {
-      throw new ForbiddenException('Only host or admins can mute/unmute');
+    const isSelfTarget = moderatorId === targetUserId;
+    if (!(isSuccess || state.hostId === moderatorId || isSelfTarget)) {
+      throw new ForbiddenException(
+        'Only owner, admin, moderator, host, or self can mute/unmute',
+      );
     }
     if (
       !state.speakers.includes(targetUserId) &&
@@ -370,7 +372,7 @@ export class CallService {
       state.muted = state.muted.filter((id) => id !== targetUserId);
     }
     this.liveRooms.set(chat.id, state);
-    return state;
+    return await this.enrichLiveState(state);
   }
 
   async getLiveRoomState(
@@ -382,7 +384,7 @@ export class CallService {
     if (!state) {
       throw new NotFoundException('Live room not found');
     }
-    return state;
+    return await this.enrichLiveState(state);
   }
 
   // ================
@@ -518,3 +520,66 @@ export class CallService {
     return { message: `User ${action} successfully` };
   }
 }
+
+// Helper enrichment of live state with participants metadata
+// Note: This keeps canonical arrays (hostId/speakers/listeners/muted) and adds a denormalized participants[] for clients
+// (deprecated placeholder interface removed)
+
+// Extend the service prototype to include enrichment without breaking DI
+Object.assign(CallService.prototype as any, {
+  async enrichLiveState(
+    this: CallService,
+    state: LiveRoomState,
+  ): Promise<LiveRoomState> {
+    try {
+      const chat = await (this as any).prisma.chat.findFirst({
+        where: { id: state.chatId },
+        include: {
+          members: { include: { user: true } },
+        },
+      });
+      if (!chat) return state;
+      const memberById = new Map<
+        string,
+        { name?: string; imageUrl?: string }
+      >();
+      (chat.members || []).forEach((m: any) => {
+        memberById.set(m.userId, {
+          name: m.user?.name || undefined,
+          imageUrl: m.user?.imageUrl || undefined,
+        });
+      });
+      const uniqueIds = Array.from(
+        new Set([
+          ...(state.hostId ? [state.hostId] : []),
+          ...(state.speakers || []),
+          ...(state.listeners || []),
+        ]),
+      ) as string[];
+      const participants: LiveParticipant[] = uniqueIds.map((userId) => {
+        const isHost = state.hostId === userId;
+        const isSpeaker = state.speakers.includes(userId);
+        const role = isHost
+          ? LiveRoleEnum.HOST
+          : isSpeaker
+            ? LiveRoleEnum.SPEAKER
+            : LiveRoleEnum.LISTENER;
+        const isMuted = state.muted.includes(userId);
+        const profile = memberById.get(userId) || {};
+        return {
+          userId,
+          name: profile.name,
+          imageUrl: profile.imageUrl,
+          role,
+          isMuted,
+        };
+      });
+
+      console.log({ participants });
+
+      return { ...state, participants };
+    } catch {
+      return state;
+    }
+  },
+});
