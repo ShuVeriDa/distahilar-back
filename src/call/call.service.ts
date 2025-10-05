@@ -559,11 +559,7 @@ Object.assign(CallService.prototype as any, {
       const participants: LiveParticipant[] = uniqueIds.map((userId) => {
         const isHost = state.hostId === userId;
         const isSpeaker = state.speakers.includes(userId);
-        const role = isHost
-          ? LiveRoleEnum.HOST
-          : isSpeaker
-            ? LiveRoleEnum.SPEAKER
-            : LiveRoleEnum.LISTENER;
+        const role = isSpeaker ? LiveRoleEnum.SPEAKER : LiveRoleEnum.LISTENER;
         const isMuted = state.muted.includes(userId);
         const profile = memberById.get(userId) || {};
         return {
