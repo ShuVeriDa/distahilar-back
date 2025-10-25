@@ -9,6 +9,7 @@ import {
   Message,
   MessageStatus,
   MessageType,
+  Prisma,
 } from '@prisma/client';
 import { FolderService } from 'src/folder/folder.service';
 import { PrismaService } from 'src/prisma.service';
@@ -38,7 +39,7 @@ export class MessageService {
       },
     });
 
-    await this.markAsRead(chat.id, userId);
+    const updates = await this.markAsRead(chat.id, userId);
 
     let messages: Message[] = [];
 
@@ -54,7 +55,7 @@ export class MessageService {
       nextCursor = messages[this.MESSAGES_BATCH - 1].id;
     }
 
-    return { messages, chatId: chat.id, nextCursor };
+    return { messages, chatId: chat.id, nextCursor, updates };
   }
 
   async getMessage(chatId: string, messageId: string) {
@@ -395,8 +396,11 @@ export class MessageService {
     }
   }
 
-  async markAsRead(chatId: string, userId: string) {
-    await this.prisma.message.updateMany({
+  async markAsRead(
+    chatId: string,
+    userId: string,
+  ): Promise<Prisma.BatchPayload> {
+    const result = await this.prisma.message.updateMany({
       where: {
         chatId: chatId,
         userId: { not: userId },
@@ -424,6 +428,7 @@ export class MessageService {
         },
       },
     });
+    return result;
   }
 
   async deleteMessage(dto: DeleteMessageDto, userId: string) {

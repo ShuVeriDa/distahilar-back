@@ -55,8 +55,12 @@ export class MessageGateway
     @MessageBody() dto: FetchMessageDto,
     @UserWs('id') userId: string,
   ) {
-    const { messages, chatId, nextCursor } =
+    const { messages, chatId, nextCursor, updates } =
       await this.messageService.getMessages(dto, userId);
+
+    if (updates && (updates as any).count > 0) {
+      this.emitUpdateMessages(chatId, updates);
+    }
 
     this.emitFetchMessages(chatId, messages, nextCursor);
 
