@@ -15,6 +15,7 @@ import { User } from 'src/user/decorators/user.decorator';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create.dto';
 import { DeleteChatDto } from './dto/delete.dto';
+import { FetchChatsDto } from './dto/fetch.dto';
 import { ChatSearchDto } from './dto/search.dto';
 
 @ApiTags('chats')
@@ -29,12 +30,18 @@ export class ChatController {
   }
 
   @Auth()
+  @Get('fetch')
+  async fetchChats(@Query() dto: FetchChatsDto, @User('id') userId: string) {
+    return await this.chatService.fetchChats(dto, userId);
+  }
+
+  @Auth()
   @Get('search')
-  async getChatByQuery(
+  async searchChatsByQuery(
     @Query() dto: ChatSearchDto,
     @User('id') userId: string,
   ) {
-    return await this.chatService.getChatByQuery(dto, userId);
+    return await this.chatService.searchChatsByQuery(dto, userId);
   }
 
   @Auth()

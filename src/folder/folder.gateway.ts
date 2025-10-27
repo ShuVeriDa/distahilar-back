@@ -5,11 +5,11 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { Folder } from '@prisma/client';
 import { Server, Socket } from 'socket.io';
 import { AuthWS } from 'src/auth/decorators/auth.decorator';
 import { UserWs } from 'src/user/decorators/user.decorator';
 import { FolderService } from './folder.service';
-import { FolderWSType } from './types.type';
 
 @WebSocketGateway()
 export class FolderGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -34,7 +34,7 @@ export class FolderGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return folders;
   }
 
-  private emitFetchFolders(userId: string, folders: FolderWSType[]) {
+  private emitFetchFolders(userId: string, folders: Folder[]) {
     const fetchKey = `folders:user:${userId}:fetch`;
 
     this.server.emit(fetchKey, folders);

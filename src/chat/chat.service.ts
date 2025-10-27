@@ -10,6 +10,7 @@ import { UserService } from 'src/user/user.service';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateChatDto } from './dto/create.dto';
 import { DeleteChatDto } from './dto/delete.dto';
+import { FetchChatsDto } from './dto/fetch.dto';
 import { ChatSearchDto } from './dto/search.dto';
 import { FoundedChatsType } from './types.type';
 
@@ -54,7 +55,78 @@ export class ChatService {
     return chat;
   }
 
-  async getChatByQuery(dto: ChatSearchDto, userId: string) {
+  async fetchChats(dto: FetchChatsDto, userId: string) {
+    const { folder } = dto;
+    const user = await this.userService.validateUser(userId);
+
+    const chats = await this.prisma.chat.findMany({
+      where: {
+        folders: {
+          some: {
+            name: folder,
+          },
+        },
+        members: {
+          some: {
+            OR: [
+              {
+                userId: user.id,
+              },
+            ],
+          },
+        },
+      },
+      include: {
+        folders: true,
+        members: {
+          include: {
+            user: true,
+          },
+        },
+        messages: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    return chats.map((chat) => {
+      const member = chat.members.find((m) => m.userId !== userId);
+      const memberName = member?.user.name;
+      const isDialog = chat.type === ChatRole.DIALOG;
+
+      const chatName = isDialog ? memberName : chat.name;
+      const imageUrl = isDialog ? member.user.imageUrl : chat.imageUrl;
+
+      const visibleMessages = chat.messages.filter(
+        (msg) => !msg.deletedByUsers?.includes(userId),
+      );
+
+      const lengthUnread = visibleMessages.filter(
+        (obj) =>
+          obj.userId === member?.userId &&
+          obj.readByUsers.some((id) => id === userId),
+      ).length;
+
+      const lastMessage = visibleMessages.at(-1);
+
+      return {
+        imageUrl: imageUrl,
+        name: chatName,
+        lastMessage: lastMessage || null,
+        lastMessageDate: lastMessage?.createdAt || null,
+        chatId: chat.id,
+        lengthUnread: lengthUnread,
+        isOnline: isDialog ? member?.user.isOnline : undefined,
+        lastSeen: isDialog ? member?.user.lastSeen : null,
+        // isChat: true,
+        type: chat.type,
+      };
+    });
+  }
+
+  async searchChatsByQuery(dto: ChatSearchDto, userId: string) {
     const { name } = dto;
     const user = await this.userService.validateUser(userId);
 
