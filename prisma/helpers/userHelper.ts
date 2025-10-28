@@ -66,7 +66,7 @@ export const createUsers = async () => {
       password: await hash(faker.internet.password()),
       name: faker.person.firstName(),
       surname: faker.person.lastName(),
-      username: faker.internet.userName().toLowerCase(),
+      username: faker.internet.username().toLowerCase(),
       phone: faker.phone.number(),
       bio: faker.person.bio(),
       imageUrl: faker.image.avatar(),

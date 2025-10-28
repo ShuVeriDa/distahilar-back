@@ -28,7 +28,25 @@ export class MessageService {
   ) {}
 
   async getMessages(dto: FetchMessageDto, userId: string) {
-    const chat = await this.validateChat(dto.chatId);
+    const chat = await this.prisma.chat.findFirst({
+      where: {
+        id: dto.chatId,
+      },
+      include: {
+        members: true,
+        folders: true,
+      },
+    });
+
+    // If chat doesn't exist, return empty messages
+    if (!chat) {
+      return {
+        messages: [],
+        chatId: dto.chatId,
+        nextCursor: null,
+        updates: { count: 0 },
+      };
+    }
 
     const isDialog = chat.type === ChatRole.DIALOG;
 
@@ -38,6 +56,16 @@ export class MessageService {
         userId: userId,
       },
     });
+
+    // If user is not a member, return empty messages
+    if (!meAsMember) {
+      return {
+        messages: [],
+        chatId: chat.id,
+        nextCursor: null,
+        updates: { count: 0 },
+      };
+    }
 
     const updates = await this.markAsRead(chat.id, userId);
 
@@ -78,6 +106,7 @@ export class MessageService {
 
   async createMessage(dto: CreateMessageDto, userId: string) {
     if (!dto.chatId) throw new NotFoundException('Content or ChatId not found');
+    console.log({ dto });
 
     const chat = await this.validateChat(dto.chatId);
 

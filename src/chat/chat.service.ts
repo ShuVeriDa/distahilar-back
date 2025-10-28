@@ -27,6 +27,7 @@ export class ChatService {
         members: {
           some: {
             userId,
+            deletedAt: null,
           },
         },
       },
@@ -38,12 +39,46 @@ export class ChatService {
   }
 
   async getChat(chatId: string, userId: string) {
-    const chat = await this.getChatById(chatId);
+    const chat = await this.prisma.chat.findFirst({
+      where: {
+        id: chatId,
+        members: {
+          some: {
+            userId,
+            deletedAt: null,
+          },
+        },
+      },
+      include: {
+        members: {
+          include: {
+            user: true,
+          },
+        },
+        messages: true,
+      },
+    });
 
+    if (!chat) {
+      if (chatId) {
+        const participant = await this.userService.getUserById(chatId);
+
+        const newChat = await this.createChat(
+          {
+            username: participant.username,
+          },
+          userId,
+        );
+
+        return newChat;
+      }
+      throw new NotFoundException('Chat not found');
+    }
+
+    // Update readByUsers for messages in this chat
     await this.prisma.message.updateMany({
       where: {
         chatId: chatId,
-        // readByUsers: { has: userId },
       },
       data: {
         readByUsers: {
@@ -71,6 +106,7 @@ export class ChatService {
             OR: [
               {
                 userId: user.id,
+                deletedAt: null,
               },
             ],
           },
@@ -179,6 +215,7 @@ export class ChatService {
                     },
                   },
                 ],
+                deletedAt: null,
               },
             },
           },
@@ -301,65 +338,50 @@ export class ChatService {
   }
 
   async createChat(dto: CreateChatDto, userId: string) {
-    const chat = await this.prisma.chat.findFirst({
-      where: {
-        AND: [
-          {
-            members: {
-              some: {
-                user: {
-                  username: dto.username,
-                },
-              },
-            },
-          },
-          {
-            members: {
-              some: {
-                user: {
-                  id: userId,
-                },
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        members: true,
-      },
+    const initiator = await this.userService.getUserById(userId);
+    const peer = await this.prisma.user.findFirst({
+      where: { username: dto.username },
+      include: { folders: true },
     });
 
-    if (chat) throw new ConflictException('Chat already exists');
-    const user = await this.userService.getUserById(userId);
+    if (!peer) throw new NotFoundException('User not found');
 
-    const member = await this.userService.getByUserName(dto.username);
-    if (!member) throw new NotFoundException('User not found');
+    if (peer.id === initiator.id)
+      throw new ConflictException('Cannot create dialog with yourself');
 
-    const chatName = `${user.username}-${member.username}`;
+    const existingDialog = await this.prisma.chat.findFirst({
+      where: {
+        type: ChatRole.DIALOG,
+        AND: [
+          { members: { some: { userId: initiator.id } } },
+          { members: { some: { userId: peer.id } } },
+        ],
+      },
+      select: { id: true },
+    });
 
-    const folderId = user.folders[0].id;
+    if (existingDialog) throw new ConflictException('Dialog already exists');
+
+    const userFolderId = initiator.folders[0].id;
+    const peerFolder = await this.prisma.folder.findFirst({
+      where: { userId: peer.id, name: 'All chats' }, // или folders[0]
+      select: { id: true },
+    });
 
     return this.prisma.chat.create({
       data: {
-        name: chatName,
         type: ChatRole.DIALOG,
+        name: [initiator.username, peer.username].sort().join('-'),
         link: uuidv4(),
-        folders: {
-          connect: {
-            id: folderId,
-          },
-        },
+        folders: { connect: [{ id: userFolderId }, { id: peerFolder.id }] },
         members: {
           create: [
-            { userId: user.id, role: MemberRole.GUEST },
-            { userId: member.id, role: MemberRole.GUEST },
+            { userId: initiator.id, role: MemberRole.GUEST },
+            { userId: peer.id, role: MemberRole.GUEST },
           ],
         },
       },
-      include: {
-        members: true,
-        messages: true,
-      },
+      include: { members: { include: { user: true } }, messages: true },
     });
   }
 
@@ -377,7 +399,7 @@ export class ChatService {
       },
     });
 
-    if (isMember) throw new ForbiddenException("You're already a member");
+    if (isMember) throw new ConflictException("You're already a member");
 
     return this.prisma.chat.update({
       where: {
