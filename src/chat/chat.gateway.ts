@@ -1,3 +1,4 @@
+import { JwtService } from '@nestjs/jwt';
 import {
   MessageBody,
   OnGatewayConnection,
@@ -6,9 +7,11 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import * as cookie from 'cookie';
 import { Server, Socket } from 'socket.io';
 import { AuthWS } from 'src/auth/decorators/auth.decorator';
 import { UserWs } from 'src/user/decorators/user.decorator';
+import { UserStatusService } from 'src/user/user-status.service';
 import { ChatService } from './chat.service';
 import { FetchChatsDto } from './dto/fetch.dto';
 import { ChatSearchDto } from './dto/search.dto';
@@ -17,13 +20,26 @@ import { FoundedChatsType } from './types.type';
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly userStatusService: UserStatusService,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
+    const userId = client.data.userId;
+    if (userId) {
+      await this.userStatusService.handleDisconnect(userId);
+    }
     console.log(`Client disconnected: ${client.id}`);
   }
 
-  handleConnection(client: Socket, ...args: any[]) {
+  async handleConnection(client: Socket, ...args: any[]) {
+    const userId = this.extractUserId(client);
+    if (userId) {
+      client.data.userId = userId;
+      await this.userStatusService.handleConnection(userId);
+    }
     console.log(`Client connected: ${client.id} ${args}`);
   }
 
@@ -68,5 +84,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const fetchKey = `chats:${folder}`;
 
     this.server.emit(fetchKey, chats);
+  }
+
+  private extractUserId(client: Socket): string | null {
+    try {
+      const token =
+        client.handshake.auth?.token ||
+        cookie.parse(client.handshake.headers.cookie || '')?.accessToken;
+
+      if (!token) return null;
+
+      const decoded = this.jwtService.verify(token, {
+        secret: process.env.JWT_SECRET,
+      });
+
+      return decoded.id;
+    } catch (err) {
+      return null;
+    }
   }
 }

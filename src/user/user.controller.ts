@@ -35,7 +35,7 @@ export class UserController {
 
   @Get(':id/status')
   @Auth()
-  async getUserStatus(@User('id') userId: string) {
+  async getUserStatus(@Param('id') userId: string) {
     return this.userService.getUserStatus(userId);
   }
 

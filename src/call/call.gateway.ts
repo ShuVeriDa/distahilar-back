@@ -12,6 +12,7 @@ import * as cookie from 'cookie';
 import { Server, Socket } from 'socket.io';
 import { AuthWS } from 'src/auth/decorators/auth.decorator';
 import { UserWs } from 'src/user/decorators/user.decorator';
+import { UserStatusService } from 'src/user/user-status.service';
 import { CallService } from './call.service';
 import {
   ApproveSpeakerDto,
@@ -44,9 +45,10 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly callService: CallService,
     private readonly jwtService: JwtService,
+    private readonly userStatusService: UserStatusService,
   ) {}
 
-  handleConnection(client: Socket) {
+  async handleConnection(client: Socket) {
     const userId = this.extractUserId(client);
     console.log({ userId, connectedUsers: this.connectedUsers });
     if (!userId) {
@@ -60,9 +62,11 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.connectedUsers.set(userId, []);
     }
     this.connectedUsers.get(userId).push(client);
+
+    await this.userStatusService.handleConnection(userId);
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
     const userId = client.data.userId;
     console.log('userId', userId);
     if (!userId) return;
@@ -76,6 +80,8 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (userSockets.length === 0) {
       this.connectedUsers.delete(userId);
     }
+
+    await this.userStatusService.handleDisconnect(userId);
   }
 
   @SubscribeMessage('initiateCall')

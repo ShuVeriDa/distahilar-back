@@ -1,3 +1,4 @@
+import { JwtService } from '@nestjs/jwt';
 import {
   MessageBody,
   OnGatewayConnection,
@@ -8,9 +9,11 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Message, Prisma } from '@prisma/client';
+import * as cookie from 'cookie';
 import { Server, Socket } from 'socket.io';
 import { AuthWS } from 'src/auth/decorators/auth.decorator';
 import { UserWs } from 'src/user/decorators/user.decorator';
+import { UserStatusService } from 'src/user/user-status.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { CreateReactionDto } from './dto/create-reaction.dto';
 import { DeleteMessageDto } from './dto/delete-message.dto';
@@ -28,13 +31,24 @@ export class MessageGateway
   constructor(
     private readonly messageService: MessageService,
     private reactionService: ReactionService,
+    private readonly userStatusService: UserStatusService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
+    const userId = client.data.userId;
+    if (userId) {
+      await this.userStatusService.handleDisconnect(userId);
+    }
     console.log(`Client disconnected: ${client.id}`);
   }
 
-  handleConnection(client: Socket, ...args: any[]) {
+  async handleConnection(client: Socket, ...args: any[]) {
+    const userId = this.extractUserId(client);
+    if (userId) {
+      client.data.userId = userId;
+      await this.userStatusService.handleConnection(userId);
+    }
     console.log(`Client connected: ${client.id} ${args}`);
   }
 
@@ -163,5 +177,23 @@ export class MessageGateway
   ) {
     const fetchKey = `chat:${chatId}:messages:update`;
     this.server.to(chatId).emit(fetchKey, messages);
+  }
+
+  private extractUserId(client: Socket): string | null {
+    try {
+      const token =
+        client.handshake.auth?.token ||
+        cookie.parse(client.handshake.headers.cookie || '')?.accessToken;
+
+      if (!token) return null;
+
+      const decoded = this.jwtService.verify(token, {
+        secret: process.env.JWT_SECRET,
+      });
+
+      return decoded.id;
+    } catch (err) {
+      return null;
+    }
   }
 }
