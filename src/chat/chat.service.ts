@@ -39,7 +39,8 @@ export class ChatService {
   }
 
   async getChat(chatId: string, userId: string) {
-    const chat = await this.prisma.chat.findFirst({
+    // First try to find as DIALOG chat
+    let chat = await this.prisma.chat.findFirst({
       where: {
         id: chatId,
         members: {
@@ -58,6 +59,23 @@ export class ChatService {
         messages: true,
       },
     });
+
+    // If not found as DIALOG, try other types (GROUP, CHANNEL)
+    if (!chat) {
+      chat = await this.prisma.chat.findFirst({
+        where: {
+          id: chatId,
+        },
+        include: {
+          members: {
+            include: {
+              user: true,
+            },
+          },
+          messages: true,
+        },
+      });
+    }
 
     if (!chat) {
       if (chatId) {
