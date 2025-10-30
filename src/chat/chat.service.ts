@@ -140,6 +140,10 @@ export class ChatService {
         messages: {
           include: {
             user: true,
+            media: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
           },
         },
       },
@@ -163,7 +167,7 @@ export class ChatService {
           obj.readByUsers.some((id) => id === userId),
       ).length;
 
-      const lastMessage = visibleMessages.at(-1);
+      const lastMessage = visibleMessages[0];
 
       return {
         imageUrl: imageUrl,
@@ -248,6 +252,10 @@ export class ChatService {
         messages: {
           include: {
             user: true,
+            media: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
           },
         },
       },
@@ -284,11 +292,13 @@ export class ChatService {
         (obj) => obj.userId === userId && obj.status !== MessageStatus.READ,
       ).length;
 
+      const lastMessage = chat.messages[0];
+
       return {
         imageUrl: imageUrl,
         name: chatName,
-        lastMessage: chat.messages.at(-1) || null,
-        lastMessageDate: chat.messages.at(-1)?.createdAt || null,
+        lastMessage: lastMessage || null,
+        lastMessageDate: lastMessage?.createdAt || null,
         chatId: chat.id,
         lengthUnread: lengthUnread,
         isOnline: isDialog ? member?.user.isOnline : undefined,
