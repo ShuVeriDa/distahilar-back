@@ -46,7 +46,6 @@
     "faker": "^6.6.6",
     "file-type": "^20.5.0",
     "file-type-mime": "^0.4.3",
-    "livekit-server-sdk": "^1.2.7",
     "multer": "^1.4.5-lts.1",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.0",
