@@ -63,4 +63,10 @@ export class CreateMessageDto {
     'i',
   )
   mediaType?: MediaType;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @IsUUID('4')
+  repliedToId?: string;
 }

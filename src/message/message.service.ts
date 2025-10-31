@@ -98,6 +98,12 @@ export class MessageService {
         voiceMessages: true,
         reactions: true,
         chat: true,
+        repliedTo: {
+          include: {
+            user: true,
+            media: true,
+          },
+        },
       },
     });
     if (!message) throw new NotFoundException('Message or Chat not found');
@@ -162,6 +168,13 @@ export class MessageService {
             },
           },
           messageType: dto.messageType,
+          ...(dto.repliedToId
+            ? {
+                repliedTo: {
+                  connect: { id: dto.repliedToId },
+                },
+              }
+            : {}),
           readByUsers: {
             set: [userId],
           },
@@ -170,6 +183,12 @@ export class MessageService {
           media: true,
           videoMessages: true,
           voiceMessages: true,
+          repliedTo: {
+            include: {
+              user: true,
+              media: true,
+            },
+          },
         },
       });
     } else if (dto.messageType === MessageType.VIDEO) {
@@ -195,6 +214,13 @@ export class MessageService {
               duration: dto.duration,
             },
           },
+          ...(dto.repliedToId
+            ? {
+                repliedTo: {
+                  connect: { id: dto.repliedToId },
+                },
+              }
+            : {}),
           readByUsers: {
             set: [userId],
           },
@@ -203,6 +229,12 @@ export class MessageService {
           media: true,
           videoMessages: true,
           voiceMessages: true,
+          repliedTo: {
+            include: {
+              user: true,
+              media: true,
+            },
+          },
         },
       });
     } else if (dto.messageType === MessageType.FILE) {
@@ -229,6 +261,13 @@ export class MessageService {
               name: dto.name,
             },
           },
+          ...(dto.repliedToId
+            ? {
+                repliedTo: {
+                  connect: { id: dto.repliedToId },
+                },
+              }
+            : {}),
           readByUsers: {
             set: [userId],
           },
@@ -237,6 +276,12 @@ export class MessageService {
           media: true,
           videoMessages: true,
           voiceMessages: true,
+          repliedTo: {
+            include: {
+              user: true,
+              media: true,
+            },
+          },
         },
       });
     } else {
@@ -262,6 +307,13 @@ export class MessageService {
               duration: dto.duration,
             },
           },
+          ...(dto.repliedToId
+            ? {
+                repliedTo: {
+                  connect: { id: dto.repliedToId },
+                },
+              }
+            : {}),
           readByUsers: {
             set: [userId],
           },
@@ -270,6 +322,12 @@ export class MessageService {
           media: true,
           videoMessages: true,
           voiceMessages: true,
+          repliedTo: {
+            include: {
+              user: true,
+              media: true,
+            },
+          },
         },
       });
     }
@@ -608,6 +666,12 @@ export class MessageService {
               },
             },
           },
+          repliedTo: {
+            include: {
+              user: true,
+              media: true,
+            },
+          },
         },
         orderBy: {
           createdAt: 'asc',
@@ -628,6 +692,12 @@ export class MessageService {
                   user: true,
                 },
               },
+            },
+          },
+          repliedTo: {
+            include: {
+              user: true,
+              media: true,
             },
           },
         },
@@ -684,6 +754,12 @@ export class MessageService {
               },
             },
           },
+          repliedTo: {
+            include: {
+              user: true,
+              media: true,
+            },
+          },
         },
         orderBy: {
           createdAt: 'asc',
@@ -724,6 +800,12 @@ export class MessageService {
                   user: true,
                 },
               },
+            },
+          },
+          repliedTo: {
+            include: {
+              user: true,
+              media: true,
             },
           },
         },
