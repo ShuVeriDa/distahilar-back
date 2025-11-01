@@ -19,11 +19,17 @@ export class UserService {
       },
     });
 
-    delete user.password;
-
     if (!user) throw new NotFoundException('The user not found');
 
-    return user;
+    const {
+      password,
+      hashedRefreshToken: __,
+      ...safeUser
+    } = user as typeof user & {
+      hashedRefreshToken?: string | null;
+    };
+
+    return safeUser;
   }
 
   async getByEmail(email: string) {
@@ -69,9 +75,15 @@ export class UserService {
       },
     });
 
-    delete createdUser.password;
+    const {
+      password: _,
+      hashedRefreshToken: __,
+      ...safeUser
+    } = createdUser as typeof createdUser & {
+      hashedRefreshToken?: string | null;
+    };
 
-    return createdUser;
+    return safeUser;
   }
 
   async changeSettings(userId: string, dto: ChangeSettingsDto) {
@@ -100,7 +112,13 @@ export class UserService {
       },
     });
 
-    const { password, ...rest } = userSettings;
+    const {
+      password,
+      hashedRefreshToken: __,
+      ...rest
+    } = userSettings as typeof userSettings & {
+      hashedRefreshToken?: string | null;
+    };
 
     return rest;
   }

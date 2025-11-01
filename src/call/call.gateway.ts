@@ -50,7 +50,6 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(client: Socket) {
     const userId = this.extractUserId(client);
-    console.log({ userId, connectedUsers: this.connectedUsers });
     if (!userId) {
       client.disconnect();
       return;
@@ -68,7 +67,6 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(client: Socket) {
     const userId = client.data.userId;
-    console.log('userId', userId);
     if (!userId) return;
 
     const userSockets = this.connectedUsers.get(userId) || [];
@@ -460,8 +458,10 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (!token) return null;
 
       const decoded = this.jwtService.verify(token, {
-        secret: process.env.JWT_SECRET,
+        secret: process.env.JWT_ACCESS_SECRET,
       });
+
+      if (decoded?.type !== 'access') return null;
 
       return decoded.id;
     } catch (err) {

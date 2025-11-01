@@ -4,8 +4,9 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { verify } from 'argon2';
+import { hash, verify } from 'argon2';
 import { Response } from 'express';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
@@ -18,12 +19,15 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private jwt: JwtService,
     private userService: UserService,
+    private readonly configService: ConfigService,
   ) {}
 
   async login(dto: LoginDto) {
-    const { password: _, ...user } = await this.validateUser(dto);
+    const user = await this.validateUser(dto);
 
     const tokens = await this.issueTokens(user.id);
+
+    await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
 
     return {
       user,
@@ -37,9 +41,18 @@ export class AuthService {
     if (oldUser)
       throw new ConflictException('User with this username already exists');
 
-    const { password: _, ...user } = await this.userService.create(dto);
+    const createdUser = await this.userService.create(dto);
+    const {
+      password: _,
+      hashedRefreshToken: __,
+      ...user
+    } = createdUser as typeof createdUser & {
+      hashedRefreshToken?: string | null;
+    };
 
     const tokens = await this.issueTokens(user.id);
+
+    await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
 
     return {
       user,
@@ -48,35 +61,49 @@ export class AuthService {
   }
 
   private async issueTokens(userId: string) {
-    const data = { id: userId };
+    const payload = {
+      sub: userId,
+      id: userId,
+    };
 
-    const accessToken = this.jwt.sign(data, {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN,
-    });
+    const accessToken = await this.jwt.signAsync(
+      { ...payload, type: 'access' },
+      {
+        secret: this.configService.getOrThrow('JWT_ACCESS_SECRET'),
+        expiresIn: this.configService.getOrThrow('ACCESS_TOKEN_EXPIRES_IN'),
+      },
+    );
 
-    const refreshToken = this.jwt.sign(data, {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN,
-    });
+    const refreshToken = await this.jwt.signAsync(
+      { ...payload, type: 'refresh' },
+      {
+        secret: this.configService.getOrThrow('JWT_REFRESH_SECRET'),
+        expiresIn: this.configService.getOrThrow('REFRESH_TOKEN_EXPIRES_IN'),
+      },
+    );
 
     return { accessToken, refreshToken };
   }
 
   addRefreshTokenResponse(res: Response, refreshToken: string) {
     const expiresIn = new Date();
-    expiresIn.setDate(
-      expiresIn.getDate() + Number(process.env.EXPIRE_DAY_REFRESH_TOKEN),
+    const expireDays = Number(
+      this.configService.get('EXPIRE_DAY_REFRESH_TOKEN') ?? 7,
     );
 
-    res.cookie(process.env.REFRESH_TOKEN_NAME, refreshToken, {
-      //серверные куки, не будет показывать в браузере, должны быть в безопасности
+    expiresIn.setDate(expiresIn.getDate() + expireDays);
+
+    const refreshTokenName =
+      this.configService.getOrThrow<string>('REFRESH_TOKEN_NAME');
+    const domain = this.configService.get<string>('DOMAIN') || undefined;
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+
+    res.cookie(refreshTokenName, refreshToken, {
       httpOnly: true,
-      domain: process.env.DOMAIN,
-      // время окончания куки
+      domain,
       expires: expiresIn,
-      //true if production
-      secure: true,
-      //lax if production
-      sameSite: 'none',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
     });
   }
 
@@ -92,35 +119,95 @@ export class AuthService {
 
     if (!isValid) throw new UnauthorizedException('Invalid password');
 
-    return user;
+    const {
+      password,
+      hashedRefreshToken: __,
+      ...safeUser
+    } = user as typeof user & {
+      hashedRefreshToken?: string | null;
+    };
+
+    return safeUser;
   }
 
   removeRefreshTokenFromResponse(res: Response) {
-    res.cookie(process.env.REFRESH_TOKEN_NAME, '', {
-      //серверное куки, не будет показывать в браузере, должны быть в безопасности
+    const refreshTokenName =
+      this.configService.getOrThrow<string>('REFRESH_TOKEN_NAME');
+    const domain = this.configService.get<string>('DOMAIN') || undefined;
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+
+    res.cookie(refreshTokenName, '', {
       httpOnly: true,
-      domain: process.env.DOMAIN,
-      // время окончания куки
+      domain,
       expires: new Date(0),
-      //true if production
-      secure: true,
-      //lax if production
-      sameSite: 'none',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
     });
   }
 
   async getNewTokens(refreshToken: string) {
-    const result = await this.jwt.verifyAsync(refreshToken);
+    const result = await this.jwt.verifyAsync(refreshToken, {
+      secret: this.configService.getOrThrow('JWT_REFRESH_SECRET'),
+    });
 
     if (!result) throw new UnauthorizedException('Invalid refresh token');
 
-    const { password, ...user } = await this.userService.getUserById(result.id);
+    if (result.type !== 'refresh')
+      throw new UnauthorizedException('Invalid token type');
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: result.id },
+      include: { settings: true, contactSaver: true },
+    });
+
+    if (!user) throw new NotFoundException('The user not found');
+
+    if (!user.hashedRefreshToken)
+      throw new UnauthorizedException('Refresh token revoked');
+
+    const isRefreshTokenValid = await verify(
+      user.hashedRefreshToken,
+      refreshToken,
+    );
+
+    if (!isRefreshTokenValid)
+      throw new UnauthorizedException('Invalid refresh token');
 
     const tokens = await this.issueTokens(user.id);
 
+    await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
+
+    const {
+      password,
+      hashedRefreshToken: __,
+      ...safeUser
+    } = user as typeof user & {
+      hashedRefreshToken?: string | null;
+    };
+
     return {
-      user,
+      user: safeUser,
       ...tokens,
     };
+  }
+
+  async logout(userId: string) {
+    await this.clearRefreshTokenHash(userId);
+  }
+
+  private async updateRefreshTokenHash(userId: string, refreshToken: string) {
+    const hashedRefreshToken = await hash(refreshToken);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { hashedRefreshToken },
+    });
+  }
+
+  private async clearRefreshTokenHash(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { hashedRefreshToken: null },
+    });
   }
 }

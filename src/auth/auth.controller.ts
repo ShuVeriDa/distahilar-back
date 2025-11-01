@@ -7,6 +7,7 @@ import {
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   ApiConflictResponse,
   ApiNotFoundResponse,
@@ -14,17 +15,18 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { User } from 'src/user/decorators/user.decorator';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { LoginDto } from 'src/user/dto/login.dto';
-import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
+import { Auth } from './decorators/auth.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly userService: UserService,
+    private readonly configService: ConfigService,
   ) {}
 
   @HttpCode(200)
@@ -64,7 +66,10 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshTokenFromCookies = req.cookies[process.env.REFRESH_TOKEN_NAME];
+    const refreshTokenName =
+      this.configService.getOrThrow<string>('REFRESH_TOKEN_NAME');
+
+    const refreshTokenFromCookies = req.cookies[refreshTokenName];
 
     if (!refreshTokenFromCookies) {
       this.authService.removeRefreshTokenFromResponse(res);
@@ -80,9 +85,14 @@ export class AuthController {
     return response;
   }
 
+  @Auth()
   @HttpCode(200)
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: Response) {
+  async logout(
+    @User('id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.authService.logout(userId);
     this.authService.removeRefreshTokenFromResponse(res);
 
     return true;

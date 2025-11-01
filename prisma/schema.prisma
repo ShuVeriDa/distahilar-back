@@ -11,15 +11,16 @@ datasource db {
 }
 
 model User {
-  id       String  @id @default(uuid())
-  username String  @unique
-  password String
-  name     String
-  surname  String
-  bio      String?
-  email    String
-  phone    String
-  imageUrl String? @db.Text
+  id                 String  @id @default(uuid())
+  username           String  @unique
+  password           String
+  hashedRefreshToken String? @db.Text
+  name               String
+  surname            String
+  bio                String?
+  email              String
+  phone              String
+  imageUrl           String? @db.Text
 
   chats ChatMember[]
 

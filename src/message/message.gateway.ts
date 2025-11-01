@@ -188,8 +188,10 @@ export class MessageGateway
       if (!token) return null;
 
       const decoded = this.jwtService.verify(token, {
-        secret: process.env.JWT_SECRET,
+        secret: process.env.JWT_ACCESS_SECRET,
       });
+
+      if (decoded?.type !== 'access') return null;
 
       return decoded.id;
     } catch (err) {
