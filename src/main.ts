@@ -20,10 +20,21 @@ async function bootstrap() {
   app.setGlobalPrefix('api'); // Установка префикса 'api' для всех маршрутов в приложении
   app.use(cookieParser()); // Подключение middleware для парсинга cookie
   app.enableCors({
-    origin: [frontendUrl], // Установка разрешенного источника для CORS (доступ с этого домена)
+    origin: [frontendUrl, 'https://distahilar-front.vercel.app'], // Установка разрешенного источника для CORS (доступ с этого домена)
     credentials: true, // Включение поддержки отправки cookie через CORS
-    allowedHeaders: 'Content-Type, Authorization',
-    exposedHeaders: 'set-cookie', // Разрешение клиенту доступа к заголовку 'set-cookie' в ответе сервера
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers',
+    ],
+    exposedHeaders: ['set-cookie'], // Разрешение клиенту доступа к заголовку 'set-cookie' в ответе сервера
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, stopAtFirstError: true }), // Включение глобальной валидации данных: удаление невалидных полей (whitelist) и остановка на первой ошибке
