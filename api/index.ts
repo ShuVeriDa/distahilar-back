@@ -9,47 +9,83 @@ import express from 'express';
 import { AppModule } from '../src/app.module';
 
 let cachedApp: any;
+let isInitializing = false;
 
 async function createApp() {
+  // Если приложение уже кэшировано, возвращаем его
   if (cachedApp) {
     return cachedApp;
   }
 
-  const expressApp = express();
-  const adapter = new ExpressAdapter(expressApp);
-
-  const app = await NestFactory.create(AppModule, adapter);
-  const configService = app.get(ConfigService);
-
-  const frontendUrl =
-    configService.get('FRONTEND_URL') || 'http://localhost:3000';
-  const nodeEnv = configService.get('NODE_ENV') || 'production';
-
-  // CORS is handled manually in the handler function
-  // to avoid conflicts with Vercel serverless functions
-
-  app.setGlobalPrefix('api');
-  app.use(cookieParser());
-
-  app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, stopAtFirstError: true }),
-  );
-
-  if (nodeEnv !== 'production') {
-    const config = new DocumentBuilder()
-      .setTitle('DistaHilar')
-      .setDescription('The DistaHilar API description')
-      .setVersion('1.0')
-      .build();
-
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+  // Предотвращаем параллельную инициализацию
+  if (isInitializing) {
+    // Ждем завершения инициализации
+    while (isInitializing) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    return cachedApp;
   }
 
-  await app.init();
-  cachedApp = expressApp;
+  try {
+    isInitializing = true;
 
-  return expressApp;
+    const expressApp = express();
+    const adapter = new ExpressAdapter(expressApp);
+
+    const app = await NestFactory.create(AppModule, adapter, {
+      logger:
+        process.env.NODE_ENV === 'production'
+          ? ['error', 'warn']
+          : ['log', 'error', 'warn', 'debug'],
+      abortOnError: false, // Не прерывать при ошибках в serverless
+    });
+
+    const configService = app.get(ConfigService);
+
+    const frontendUrl =
+      configService.get('FRONTEND_URL') || 'http://localhost:3000';
+    const nodeEnv = configService.get('NODE_ENV') || 'production';
+
+    // CORS is handled manually in the handler function
+    // to avoid conflicts with Vercel serverless functions
+
+    app.setGlobalPrefix('api');
+    app.use(cookieParser());
+
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, stopAtFirstError: true }),
+    );
+
+    if (nodeEnv !== 'production') {
+      const config = new DocumentBuilder()
+        .setTitle('DistaHilar')
+        .setDescription('The DistaHilar API description')
+        .setVersion('1.0')
+        .build();
+
+      const document = SwaggerModule.createDocument(app, config);
+      SwaggerModule.setup('api', app, document);
+    }
+
+    await app.init();
+    cachedApp = expressApp;
+
+    // Установка таймаута для очистки неактивного соединения
+    // В serverless среде это поможет избежать утечек памяти
+    if (nodeEnv === 'production') {
+      // Через 5 минут неактивности сбрасываем кэш
+      setTimeout(
+        () => {
+          cachedApp = null;
+        },
+        5 * 60 * 1000,
+      );
+    }
+
+    return expressApp;
+  } finally {
+    isInitializing = false;
+  }
 }
 
 export default async function handler(req: Request, res: Response) {
