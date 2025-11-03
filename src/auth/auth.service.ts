@@ -9,9 +9,9 @@ import { JwtService } from '@nestjs/jwt';
 import { hash, verify } from 'argon2';
 import { Response } from 'express';
 import { PrismaService } from 'src/prisma.service';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { LoginDto } from 'src/user/dto/login.dto';
 import { UserService } from 'src/user/user.service';
+import { CreateUserDto } from '../user/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {

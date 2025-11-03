@@ -16,8 +16,8 @@ import {
 } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { User } from 'src/user/decorators/user.decorator';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { LoginDto } from 'src/user/dto/login.dto';
+import { CreateUserDto } from '../user/dto/create-user.dto';
 import { AuthService } from './auth.service';
 import { Auth } from './decorators/auth.decorator';
 
