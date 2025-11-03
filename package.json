@@ -21,6 +21,8 @@
     "postinstall": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:status": "prisma migrate status",
     "seed": "ts-node prisma/seed.ts",
     "seed2": "ts-node prisma/seed2.ts"
   },

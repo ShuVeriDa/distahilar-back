@@ -26,40 +26,31 @@ postgresql://user:password@dpg-xxxxx.oregon-postgres.render.com/dbname
 
 ---
 
-### Шаг 2: Примените миграции локально
+### Шаг 2: Примените миграции
 
-Откройте терминал в папке `back/`:
-
-**Вариант 1: Через временный .env**
-
-```bash
-# Создайте временный файл
-echo DATABASE_URL="postgresql://ваш-url-от-render" > .env.temp
-
-# Windows PowerShell:
-$env:DATABASE_URL="postgresql://ваш-url-от-render"
-npx prisma migrate deploy
-
-# Linux/Mac:
-export DATABASE_URL="postgresql://ваш-url-от-render"
-npx prisma migrate deploy
-```
-
-**Вариант 2: Напрямую в команде**
+**Вариант 1: Локально (PowerShell)**
 
 ```bash
 # Windows PowerShell
-$env:DATABASE_URL="postgresql://user:pass@dpg-xxx.oregon-postgres.render.com/db"; npx prisma migrate deploy
-
-# Linux/Mac
-DATABASE_URL="postgresql://user:pass@dpg-xxx.oregon-postgres.render.com/db" npx prisma migrate deploy
+$env:DATABASE_URL="postgresql://user:pass@dpg-xxx.oregon-postgres.render.com/db"
+npm run migrate:deploy
 ```
 
-**Если миграций нет, создайте первую:**
+**Вариант 2: Локально (Linux/Mac)**
 
 ```bash
-npx prisma migrate dev --name init
+export DATABASE_URL="postgresql://user:pass@dpg-xxx.oregon-postgres.render.com/db"
+npm run migrate:deploy
 ```
+
+**Вариант 3: Через Render.com Shell**
+
+1. Ваш Web Service → **Shell**
+2. Выполните: `npm run migrate:deploy`
+
+**Вариант 4: Автоматически при деплое**
+
+Settings → Build & Deploy → Post Deploy Command: `npm run migrate:deploy`
 
 ---
 

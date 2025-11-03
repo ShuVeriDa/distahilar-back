@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: distahilar-backend
+    env: node
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+        # Установите DATABASE_URL в Render Dashboard:
+        # Settings → Environment → Add Environment Variable
+        # Значение должно быть External Database URL из вашего PostgreSQL сервиса
+      - key: JWT_ACCESS_SECRET
+        sync: false
+        # Сгенерируйте секрет: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+      - key: JWT_REFRESH_SECRET
+        sync: false
+        # Сгенерируйте секрет: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+      - key: FRONTEND_URL
+        sync: false
+        # URL вашего фронтенда, например: https://distahilar-front.vercel.app
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+        optional: true
+      - key: CLOUDINARY_API_KEY
+        sync: false
+        optional: true
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+        optional: true
+
+# Примечания:
+# 1. После создания сервиса на Render.com:
+#    - Settings → Build & Deploy → Post Deploy Command: npm run migrate:deploy
+#    Это применит миграции автоматически после каждого деплоя
+#
+# 2. Или примените миграции вручную один раз:
+#    - Settings → Shell → выполните: npm run migrate:deploy
+#
+# 3. DATABASE_URL должен быть в формате:
+#    postgresql://user:password@dpg-xxxxx.oregon-postgres.render.com/dbname?connection_limit=1&pool_timeout=20&connect_timeout=10
+

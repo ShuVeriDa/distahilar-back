@@ -47,15 +47,35 @@ DATABASE_URL="postgresql://ваш-user:ваш-password@dpg-xxxxx.oregon-postgres
 
 ### Шаг 3: Примените миграции
 
+**Вариант 1: Локально (рекомендуется для первого раза)**
+
 Откройте терминал в папке `back/`:
 
 ```bash
-# Если у вас нет папки migrations, создайте первую миграцию
-npx prisma migrate dev --name init
+# Windows PowerShell
+$env:DATABASE_URL="postgresql://ваш-user:ваш-password@dpg-xxxxx.oregon-postgres.render.com/ваша-db"
+npm run migrate:deploy
 
-# Или примените существующие миграции
-npx dotenv -e .env.migration -- npx prisma migrate deploy
+# Linux/Mac
+export DATABASE_URL="postgresql://ваш-user:ваш-password@dpg-xxxxx.oregon-postgres.render.com/ваша-db"
+npm run migrate:deploy
 ```
+
+**Вариант 2: Через Render.com Shell**
+
+1. Откройте ваш Web Service на Render.com
+2. Перейдите в **Shell**
+3. Выполните:
+```bash
+npm run migrate:deploy
+```
+
+**Вариант 3: Автоматически при деплое**
+
+Настройте Post Deploy Command в Render.com:
+- Settings → Build & Deploy → Post Deploy Command: `npm run migrate:deploy`
+
+Это автоматически применит миграции после каждого успешного деплоя.
 
 Если `dotenv-cli` не установлен:
 
