@@ -25,10 +25,23 @@ async function createApp() {
     configService.get('FRONTEND_URL') || 'http://localhost:3000';
   const nodeEnv = configService.get('NODE_ENV') || 'production';
 
-  app.setGlobalPrefix('api');
-  app.use(cookieParser());
+  // Configure CORS before setting global prefix
+  const allowedOrigins = [
+    frontendUrl,
+    'https://distahilar-front.vercel.app',
+    'http://localhost:3000',
+  ].filter(Boolean); // Remove any undefined values
+
   app.enableCors({
-    origin: [frontendUrl, 'https://distahilar-front.vercel.app'],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      // or if origin is in the allowed list
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
@@ -44,6 +57,10 @@ async function createApp() {
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
+
+  app.setGlobalPrefix('api');
+  app.use(cookieParser());
+
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, stopAtFirstError: true }),
   );
@@ -66,6 +83,36 @@ async function createApp() {
 }
 
 export default async function handler(req: Request, res: Response) {
+  // Handle preflight OPTIONS request explicitly before app initialization
+  if (req.method === 'OPTIONS') {
+    const origin = req.headers.origin;
+    const frontendUrl = process.env.FRONTEND_URL;
+    const allowedOrigins = [
+      frontendUrl,
+      'https://distahilar-front.vercel.app',
+      'http://localhost:3000',
+    ].filter(Boolean); // Remove undefined values
+
+    // For credentials: true, we must return the exact origin or reject
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader(
+        'Access-Control-Allow-Methods',
+        'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      );
+      res.setHeader(
+        'Access-Control-Allow-Headers',
+        'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers',
+      );
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Max-Age', '86400');
+      return res.status(204).end();
+    }
+
+    // If origin is not allowed, return 403
+    return res.status(403).json({ error: 'Origin not allowed' });
+  }
+
   const app = await createApp();
   return app(req, res);
 }
