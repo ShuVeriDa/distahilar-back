@@ -84,7 +84,7 @@ npm run start:dev
 npm run start:prod
 ```
 
-The production start command runs `node dist/main`.
+The production start command runs `node dist/src/main`.
 
 ## Database Management
 
@@ -170,7 +170,7 @@ For production deployments, use a process manager like PM2:
 ```bash
 npm install -g pm2
 
-pm2 start dist/main.js --name distanhilar-backend
+pm2 start dist/src/main.js --name distanhilar-backend
 pm2 save
 pm2 startup
 ```

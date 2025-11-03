@@ -84,7 +84,7 @@ Then update your `.env` file with all required variables.
 Migrations run automatically on container startup via the command:
 
 ```bash
-npx prisma migrate deploy && node dist/main
+npx prisma migrate deploy && node dist/src/main
 ```
 
 For manual migrations:
