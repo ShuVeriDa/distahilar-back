@@ -28,10 +28,21 @@ async function createApp() {
   app.setGlobalPrefix('api');
   app.use(cookieParser());
   app.enableCors({
-    origin: [frontendUrl],
+    origin: [frontendUrl, 'https://distahilar-front.vercel.app'],
     credentials: true,
-    allowedHeaders: 'Content-Type, Authorization',
-    exposedHeaders: 'set-cookie',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers',
+    ],
+    exposedHeaders: ['set-cookie'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, stopAtFirstError: true }),
