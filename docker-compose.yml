@@ -33,8 +33,17 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/distanhilar
       NODE_ENV: production
       PORT: 9555
-      # Add your other environment variables here
-      # Or use env_file: .env
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      ACCESS_TOKEN_EXPIRES_IN: ${ACCESS_TOKEN_EXPIRES_IN:-15m}
+      REFRESH_TOKEN_EXPIRES_IN: ${REFRESH_TOKEN_EXPIRES_IN:-7d}
+      EXPIRE_DAY_REFRESH_TOKEN: ${EXPIRE_DAY_REFRESH_TOKEN:-7}
+      REFRESH_TOKEN_NAME: ${REFRESH_TOKEN_NAME:-refreshToken}
+      DOMAIN: ${DOMAIN:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     depends_on:
       postgres:
         condition: service_healthy
