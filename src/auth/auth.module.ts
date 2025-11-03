@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule, JwtService } from '@nestjs/jwt';
-import { getJwtConfig } from 'src/config/jwt.config';
+import { JwtModule, JwtModuleOptions, JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { AuthController } from './auth.controller';
@@ -25,7 +24,11 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: getJwtConfig,
+      useFactory: async (
+        configService: ConfigService,
+      ): Promise<JwtModuleOptions> => ({
+        secret: configService.get<string>('JWT_ACCESS_SECRET'),
+      }),
     }),
   ],
 })
