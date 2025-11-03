@@ -11,6 +11,7 @@ import {
   MessageType,
   Prisma,
 } from '@prisma/client';
+import { FileService } from 'src/file/file.service';
 import { FolderService } from 'src/folder/folder.service';
 import { PrismaService } from 'src/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -25,6 +26,7 @@ export class MessageService {
   constructor(
     private prisma: PrismaService,
     private readonly folderService: FolderService,
+    private readonly fileService: FileService,
   ) {}
 
   async getMessages(dto: FetchMessageDto, userId: string) {
@@ -552,6 +554,7 @@ export class MessageService {
       }
 
       if (isOwner || isAdmin || isModerator) {
+        await this.deleteMessageMediaFromCloudinary(dto.messageIds, chat.id);
         await this.prisma.message.deleteMany({
           where: {
             id: {
@@ -878,6 +881,65 @@ export class MessageService {
     };
   }
 
+  private async deleteMessageMediaFromCloudinary(
+    messageIds: string[],
+    chatId: string,
+  ) {
+    if (!messageIds?.length) {
+      return;
+    }
+
+    const messagesWithMedia = await this.prisma.message.findMany({
+      where: {
+        id: {
+          in: messageIds,
+        },
+        chatId,
+      },
+      include: {
+        media: true,
+        videoMessages: true,
+        voiceMessages: true,
+      },
+    });
+
+    if (!messagesWithMedia.length) {
+      return;
+    }
+
+    const urls = new Set<string>();
+
+    for (const currentMessage of messagesWithMedia) {
+      currentMessage.media?.forEach((item) => {
+        if (item?.url) {
+          urls.add(item.url);
+        }
+      });
+
+      currentMessage.videoMessages?.forEach((item) => {
+        if (item?.url) {
+          urls.add(item.url);
+        }
+      });
+
+      currentMessage.voiceMessages?.forEach((item) => {
+        if (item?.url) {
+          urls.add(item.url);
+        }
+      });
+    }
+
+    if (!urls.size) {
+      return;
+    }
+
+    await Promise.allSettled(
+      Array.from(urls).map((url) =>
+        this.fileService.deleteFromCloudinaryByUrl(url),
+      ),
+    );
+  }
+
   private async deleteMessageForOwnerMessage(
     delete_both: boolean,
     isMessageOwner: boolean,
@@ -886,6 +948,7 @@ export class MessageService {
     userId: string,
   ) {
     if (delete_both && isMessageOwner) {
+      await this.deleteMessageMediaFromCloudinary(messageIds, chatId);
       await this.prisma.message.deleteMany({
         where: {
           id: {

@@ -11,9 +11,11 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { FileService } from './file.service';
-import { CustomUploadFileTypeValidator } from './file.validators';
+import {
+  CustomUploadFileSizeValidator,
+  CustomUploadFileTypeValidator,
+} from './file.validators';
 
-const MAX_PROFILE_PICTURE_SIZE_IN_BYTES = 10 * 1024 * 1024;
 const VALID_UPLOADS_MIME_TYPES = [
   // Изображения
   'image/jpeg',
@@ -42,6 +44,7 @@ const VALID_UPLOADS_MIME_TYPES = [
   'application/ogg',
   'audio/webm',
   'audio/mpeg', // MP3 и другие MPEG аудио
+  'audio/mp3', // MP3 формат
   'audio/wav', // WAV несжатый аудио
   'audio/aac', // AAC сжатый аудио
   'audio/flac', // FLAC lossless аудио
@@ -79,16 +82,22 @@ export class FileController {
             fileType: VALID_UPLOADS_MIME_TYPES,
           }),
         )
-        .addMaxSizeValidator({ maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES })
+        .addValidator(new CustomUploadFileSizeValidator())
         .build({ errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY }),
     )
     files: Express.Multer.File[],
     @Query('folder') folder?: string,
+    @Query('compress') compress?: string,
   ) {
     console.log({ files });
 
     try {
-      return await this.fileService.saveFiles(files, folder);
+      // Парсим параметр compress (по умолчанию включено сжатие)
+      const shouldCompress = compress === 'false' ? false : true;
+
+      return await this.fileService.saveFiles(files, folder, {
+        compress: shouldCompress,
+      });
     } catch (error) {
       throw new BadRequestException(error.message || 'File upload failed.');
     }
