@@ -1,0 +1,2 @@
+-- CreateBaselineMigration
+-- Database is already in sync with schema
