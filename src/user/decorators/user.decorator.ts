@@ -27,7 +27,9 @@ export const UserWs = createParamDecorator(
 
     if (!token) return null;
 
-    const jwtService = new JwtService();
+    const jwtService = new JwtService({
+      secret: process.env.JWT_ACCESS_SECRET,
+    });
 
     const decoded = jwtService.verify(token, {
       secret: process.env.JWT_ACCESS_SECRET,

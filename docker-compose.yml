@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: distanhilar-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distanhilar
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: distanhilar-backend
+    restart: unless-stopped
+    ports:
+      - '9555:9555'
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/distanhilar
+      NODE_ENV: production
+      PORT: 9555
+      # Add your other environment variables here
+      # Or use env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - distanhilar-network
+    # Run migrations on startup
+    command: sh -c "npx prisma migrate deploy && node dist/main"
+
+networks:
+  distanhilar-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

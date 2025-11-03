@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ChatService } from 'src/chat/chat.service';
 import { PrismaService } from 'src/prisma.service';
@@ -18,6 +19,7 @@ import { FolderService } from './folder.service';
     UserService,
     FolderGateway,
     JwtService,
+    ConfigService,
   ],
 })
 export class FolderModule {}
