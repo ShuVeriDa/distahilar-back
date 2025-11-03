@@ -56,8 +56,9 @@ export class CreateUserDto {
   surname: string;
 
   @ApiProperty()
+  @IsOptional()
   @IsPhoneNumber()
-  phone: string;
+  phone?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
