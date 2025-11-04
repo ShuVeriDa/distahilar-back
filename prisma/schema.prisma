@@ -21,7 +21,7 @@ model User {
   surname            String
   bio                String?
   email              String
-  phone              String
+  phone              String?
   imageUrl           String? @db.Text
 
   chats ChatMember[]
