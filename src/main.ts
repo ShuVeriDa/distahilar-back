@@ -20,7 +20,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api'); // Установка префикса 'api' для всех маршрутов в приложении
   app.use(cookieParser()); // Подключение middleware для парсинга cookie
   app.enableCors({
-    origin: [frontendUrl, 'https://distahilar-front.vercel.app'], // Установка разрешенного источника для CORS (доступ с этого домена)
+    origin: [frontendUrl, 'https://distahilar.vercel.app'], // Установка разрешенного источника для CORS (доступ с этого домена)
     credentials: true, // Включение поддержки отправки cookie через CORS
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
