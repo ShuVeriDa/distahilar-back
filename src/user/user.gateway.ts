@@ -10,7 +10,22 @@ import * as cookie from 'cookie';
 import { Server, Socket } from 'socket.io';
 import { UserStatusService } from './user-status.service';
 
-@WebSocketGateway()
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+const allowedOrigins = [
+  frontendUrl,
+  'https://distahilar.vercel.app',
+  'http://localhost:3000',
+].filter(Boolean);
+
+@WebSocketGateway({
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  },
+  transports: ['websocket', 'polling'],
+})
 export class UserGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {

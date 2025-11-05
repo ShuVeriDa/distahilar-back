@@ -14,7 +14,22 @@ import { UserWs } from 'src/user/decorators/user.decorator';
 import { UserStatusService } from 'src/user/user-status.service';
 import { FolderService } from './folder.service';
 
-@WebSocketGateway()
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+const allowedOrigins = [
+  frontendUrl,
+  'https://distahilar.vercel.app',
+  'http://localhost:3000',
+].filter(Boolean);
+
+@WebSocketGateway({
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  },
+  transports: ['websocket', 'polling'],
+})
 export class FolderGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   constructor(

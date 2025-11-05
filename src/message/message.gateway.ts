@@ -23,7 +23,22 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageService } from './message.service';
 import { ReactionService } from './reaction.service';
 
-@WebSocketGateway()
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+const allowedOrigins = [
+  frontendUrl,
+  'https://distahilar.vercel.app',
+  'http://localhost:3000',
+].filter(Boolean);
+
+@WebSocketGateway({
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  },
+  transports: ['websocket', 'polling'],
+})
 export class MessageGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {

@@ -37,7 +37,22 @@ import {
   WebRtcOfferDto,
 } from './call.type';
 
-@WebSocketGateway()
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+const allowedOrigins = [
+  frontendUrl,
+  'https://distahilar.vercel.app',
+  'http://localhost:3000',
+].filter(Boolean);
+
+@WebSocketGateway({
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  },
+  transports: ['websocket', 'polling'],
+})
 export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private connectedUsers = new Map<string, Socket[]>(); // userId => sockets

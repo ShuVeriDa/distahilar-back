@@ -17,7 +17,22 @@ import { FetchChatsDto } from './dto/fetch.dto';
 import { ChatSearchDto } from './dto/search.dto';
 import { FoundedChatsType } from './types.type';
 
-@WebSocketGateway()
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+const allowedOrigins = [
+  frontendUrl,
+  'https://distahilar.vercel.app',
+  'http://localhost:3000',
+].filter(Boolean);
+
+@WebSocketGateway({
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  },
+  transports: ['websocket', 'polling'],
+})
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   constructor(
