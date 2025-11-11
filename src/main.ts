@@ -42,14 +42,40 @@ async function bootstrap() {
 
   // Swagger only in development
   if (nodeEnv !== 'production') {
-    const config = new DocumentBuilder()
-      .setTitle('DistaHilar')
-      .setDescription('The DistaHilar API description')
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('DistaHilar API')
+      .setDescription('API documentation for the DistaHilar platform')
       .setVersion('1.0')
+      .addBearerAuth({
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        in: 'header',
+        name: 'Authorization',
+        description: 'Provide your JWT access token prefixed with "Bearer"',
+      })
+      .addServer(`http://localhost:${port}/api`, 'Local environment')
       .build();
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, swaggerDocument, {
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
+      customSiteTitle: 'DistaHilar API Docs',
+    });
+
+    const httpAdapter = app.getHttpAdapter().getInstance();
+
+    if (typeof httpAdapter?.get === 'function') {
+      httpAdapter.get('/api', (_req, res) => {
+        if (typeof res.redirect === 'function') {
+          res.redirect('/api/docs');
+        } else if (typeof res.status === 'function') {
+          res.status(302).setHeader('Location', '/api/docs').send();
+        }
+      });
+    }
   }
 
   await app.listen(port);

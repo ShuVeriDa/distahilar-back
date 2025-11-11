@@ -9,7 +9,15 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FileService } from './file.service';
 import {
   CustomUploadFileSizeValidator,
@@ -68,12 +76,49 @@ const VALID_UPLOADS_MIME_TYPES = [
 ];
 
 @ApiTags('files')
+@ApiBearerAuth()
 @Controller('files')
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
   @Post()
   @UseInterceptors(FilesInterceptor('files', 10)) // Максимум 10 файлов
+  @ApiOperation({ summary: 'Upload files to the storage' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+        folder: {
+          type: 'string',
+          description: 'Optional folder identifier',
+        },
+        compress: {
+          type: 'string',
+          description: 'Set to "false" to disable compression',
+        },
+      },
+      required: ['files'],
+    },
+  })
+  @ApiQuery({
+    name: 'folder',
+    required: false,
+    description: 'Target folder to store files',
+  })
+  @ApiQuery({
+    name: 'compress',
+    required: false,
+    description: 'Flag to disable compression (default true)',
+  })
+  @ApiOkResponse({ description: 'Files processed successfully' })
   public async uploadFile(
     @UploadedFiles(
       new ParseFilePipeBuilder()

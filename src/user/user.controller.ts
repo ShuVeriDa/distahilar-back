@@ -8,9 +8,13 @@ import {
   Patch,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { Auth } from 'src/auth/decorators/auth.decorator';
@@ -20,21 +24,28 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
 
 @ApiTags('users')
+@ApiBearerAuth()
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get(':id')
   @Auth()
+  @ApiOperation({ summary: 'Get user profile by identifier' })
+  @ApiParam({ name: 'id', description: 'User identifier' })
   @ApiNotFoundResponse({
     description: 'The user not found',
   })
+  @ApiOkResponse({ description: 'Returns user profile data' })
   async getUserById(@Param('id') userId: string) {
     return this.userService.getUserById(userId);
   }
 
   @Get(':id/status')
   @Auth()
+  @ApiOperation({ summary: 'Get current status of the user' })
+  @ApiParam({ name: 'id', description: 'User identifier' })
+  @ApiOkResponse({ description: 'Returns user online status' })
   async getUserStatus(@Param('id') userId: string) {
     return this.userService.getUserStatus(userId);
   }
@@ -47,6 +58,8 @@ export class UserController {
   @HttpCode(201)
   @Auth()
   @Patch()
+  @ApiOperation({ summary: 'Update user profile fields' })
+  @ApiOkResponse({ description: 'User profile updated successfully' })
   async updateUser(@Body() dto: UpdateUserDto, @User('id') userId: string) {
     return this.userService.updateUser(dto, userId);
   }
@@ -54,6 +67,7 @@ export class UserController {
   @HttpCode(201)
   @Auth()
   @Patch('settings')
+  @ApiOperation({ summary: 'Update user notification and language settings' })
   @ApiNotFoundResponse({
     description: 'The user not found',
   })
@@ -61,6 +75,7 @@ export class UserController {
     description: "Change user's settings",
     type: ChangeSettingsDto,
   })
+  @ApiOkResponse({ description: 'User settings updated successfully' })
   async changeSettings(
     @User('id') userId: string,
     @Body() dto: ChangeSettingsDto,
@@ -71,12 +86,14 @@ export class UserController {
   @HttpCode(201)
   @Auth()
   @Delete()
+  @ApiOperation({ summary: 'Delete current user account' })
   @ApiNotFoundResponse({
     description: 'The user not found',
   })
   @ApiCreatedResponse({
     description: 'The user has been deleted successfully',
   })
+  @ApiOkResponse({ description: 'User account deleted successfully' })
   async deleteUser(@User('id') userId: string) {
     return this.userService.deleteUser(userId);
   }

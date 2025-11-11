@@ -8,6 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -23,6 +24,7 @@ import { CreateCommunityDto } from './dto/create.dto';
 import { UpdateCommunityDto } from './dto/update.dto';
 
 @ApiTags('communities')
+@ApiBearerAuth()
 @Controller('communities')
 export class CommunityController {
   constructor(private readonly communityService: CommunityService) {}

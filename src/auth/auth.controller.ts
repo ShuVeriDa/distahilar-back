@@ -9,8 +9,12 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  ApiBearerAuth,
   ApiConflictResponse,
+  ApiCreatedResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -31,8 +35,10 @@ export class AuthController {
 
   @HttpCode(200)
   @Post('login')
+  @ApiOperation({ summary: 'Authenticate user with credentials' })
   @ApiNotFoundResponse({ description: 'The user not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid password' })
+  @ApiOkResponse({ description: 'Access and refresh tokens have been issued' })
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
@@ -49,6 +55,10 @@ export class AuthController {
   @ApiConflictResponse({
     description: 'User with this username already exists',
   })
+  @ApiOperation({ summary: 'Register a new user account' })
+  @ApiCreatedResponse({
+    description: 'User has been successfully registered',
+  })
   async register(
     @Body() dto: CreateUserDto,
     @Res({ passthrough: true }) res: Response,
@@ -62,6 +72,10 @@ export class AuthController {
 
   @HttpCode(200)
   @Post('login/access-token')
+  @ApiOperation({ summary: 'Refresh access token using the refresh token' })
+  @ApiOkResponse({
+    description: 'New access and refresh tokens have been issued',
+  })
   async getNewTokens(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -88,6 +102,9 @@ export class AuthController {
   @Auth()
   @HttpCode(200)
   @Post('logout')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Invalidate refresh token and logout' })
+  @ApiOkResponse({ description: 'Logout completed successfully' })
   async logout(
     @User('id') userId: string,
     @Res({ passthrough: true }) res: Response,
