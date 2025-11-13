@@ -134,8 +134,6 @@ export class FileController {
     @Query('folder') folder?: string,
     @Query('compress') compress?: string,
   ) {
-    console.log({ files });
-
     try {
       // Парсим параметр compress (по умолчанию включено сжатие)
       const shouldCompress = compress === 'false' ? false : true;
