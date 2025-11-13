@@ -1,0 +1,1825 @@
+asyncapi: 3.0.0
+info:
+  title: DistaHilar WebSocket API
+  version: 1.1.0
+  description: |
+    Socket.IO API providing real-time messaging, chat discovery, folders, user
+    presence, and 1:1 / live room call signaling for the DistaHilar client.
+    Clients must authenticate during the Socket.IO handshake by supplying either
+    a bearer JWT via `auth.token` or a cookie `accessToken`.
+servers:
+  local:
+    host: localhost:9555
+    protocol: ws
+    description: Local Socket.IO server
+defaultContentType: application/json
+# ======================
+# Channels: Messaging
+# ======================
+channels:
+  # Messaging commands & room management
+  joinChat:
+    address: joinChat
+    summary: Join a chat room to receive chat-scoped events.
+    tags:
+      - name: messaging
+    messages:
+      JoinChatRequest:
+        name: JoinChatRequest
+        title: Join specific chat room
+        summary: Client requests to join a chat room by id.
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/JoinChatDto'
+  getMessages:
+    address: getMessages
+    summary: Fetch a page of messages for a chat.
+    tags:
+      - name: messaging
+    messages:
+      GetMessagesRequest:
+        name: GetMessagesRequest
+        title: Fetch paginated messages for a chat
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/FetchMessageDto'
+  createMessage:
+    address: createMessage
+    summary: Create a new message in chat.
+    tags:
+      - name: messaging
+    messages:
+      CreateMessageRequest:
+        name: CreateMessageRequest
+        title: Create a new message in chat
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/CreateMessageDto'
+  editMessage:
+    address: editMessage
+    summary: Edit an existing message.
+    tags:
+      - name: messaging
+    messages:
+      EditMessageRequest:
+        name: EditMessageRequest
+        title: Edit existing message
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/UpdateMessageDto'
+  deleteMessage:
+    address: deleteMessage
+    summary: Delete one or more messages.
+    tags:
+      - name: messaging
+    messages:
+      DeleteMessageRequest:
+        name: DeleteMessageRequest
+        title: Delete one or more messages
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/DeleteMessageDto'
+  createReaction:
+    address: createReaction
+    summary: Add or toggle reaction for message.
+    tags:
+      - name: messaging
+    messages:
+      CreateReactionRequest:
+        name: CreateReactionRequest
+        title: Add or toggle a reaction for a message
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/CreateReactionDto'
+  pinMessage:
+    address: pinMessage
+    summary: Pin or unpin a message.
+    tags:
+      - name: messaging
+    messages:
+      PinMessageRequest:
+        name: PinMessageRequest
+        title: Pin or unpin a message in chat
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/PinMessageDto'
+  # ======================
+  # Channels: Chats & Folders
+  # ======================
+  fetchChats:
+    address: fetchChats
+    summary: Retrieve chat list for a folder shortcut.
+    tags:
+      - name: chats
+    messages:
+      FetchChatsRequest:
+        name: FetchChatsRequest
+        title: Fetch chats for folder
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/FetchChatsDto'
+  searchChats:
+    address: searchChats
+    summary: Search chats by text query.
+    tags:
+      - name: chats
+    messages:
+      SearchChatsRequest:
+        name: SearchChatsRequest
+        title: Search chats by name
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/ChatSearchDto'
+  folders:
+    address: folders
+    summary: Request the list of folders for the authenticated user.
+    tags:
+      - name: folders
+    messages:
+      FoldersFetchRequest:
+        name: FoldersFetchRequest
+        title: Request folders list
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/EmptyPayload'
+  # ======================
+  # Channels: Calls & Voice Chats
+  # ======================
+  initiateCall:
+    address: initiateCall
+    summary: Initiate a 1:1 call inside a dialog chat.
+    tags:
+      - name: calls
+    messages:
+      InitiateCallRequest:
+        name: InitiateCallRequest
+        title: Initiate call
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/InitiateCallDto'
+  respondToCall:
+    address: respondToCall
+    summary: Accept or reject an incoming call.
+    tags:
+      - name: calls
+    messages:
+      CallResponseRequest:
+        name: CallResponseRequest
+        title: Respond to call
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/CallResponseDto'
+  endCall:
+    address: endCall
+    summary: End an active call.
+    tags:
+      - name: calls
+    messages:
+      EndCallRequest:
+        name: EndCallRequest
+        title: End call
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/CallEndDto'
+  joinVoiceChat:
+    address: joinVoiceChat
+    summary: Join voice chat room for a group/channel.
+    tags:
+      - name: calls
+    messages:
+      JoinVoiceChatRequest:
+        name: JoinVoiceChatRequest
+        title: Join voice chat
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/JoinVoiceChatDto'
+  leaveVoiceChat:
+    address: leaveVoiceChat
+    summary: Leave voice chat room for a group/channel.
+    tags:
+      - name: calls
+    messages:
+      LeaveVoiceChatRequest:
+        name: LeaveVoiceChatRequest
+        title: Leave voice chat
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/LeaveVoiceChatDto'
+  # ======================
+  # Channels: Live Rooms
+  # ======================
+  startLive:
+    address: startLive
+    summary: Start a live voice room in a group or channel.
+    tags:
+      - name: live
+    messages:
+      StartLiveRequest:
+        name: StartLiveRequest
+        title: Start live room
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/StartLiveDto'
+  stopLive:
+    address: stopLive
+    summary: Stop an active live room.
+    tags:
+      - name: live
+    messages:
+      StopLiveRequest:
+        name: StopLiveRequest
+        title: Stop live room
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/StopLiveDto'
+  joinLive:
+    address: joinLive
+    summary: Join an active live room as listener.
+    tags:
+      - name: live
+    messages:
+      JoinLiveRequest:
+        name: JoinLiveRequest
+        title: Join live room
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/JoinLiveDto'
+  leaveLive:
+    address: leaveLive
+    summary: Leave a live room.
+    tags:
+      - name: live
+    messages:
+      LeaveLiveRequest:
+        name: LeaveLiveRequest
+        title: Leave live room
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/LeaveLiveDto'
+  raiseHand:
+    address: raiseHand
+    summary: Raise hand inside a live room.
+    tags:
+      - name: live
+    messages:
+      RaiseHandRequest:
+        name: RaiseHandRequest
+        title: Raise hand in live room
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/RaiseHandDto'
+  approveSpeaker:
+    address: approveSpeaker
+    summary: Promote listener to speaker.
+    tags:
+      - name: live
+    messages:
+      ApproveSpeakerRequest:
+        name: ApproveSpeakerRequest
+        title: Approve speaker in live room
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/ApproveSpeakerDto'
+  revokeSpeaker:
+    address: revokeSpeaker
+    summary: Demote speaker to listener.
+    tags:
+      - name: live
+    messages:
+      RevokeSpeakerRequest:
+        name: RevokeSpeakerRequest
+        title: Revoke speaker role
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/RevokeSpeakerDto'
+  toggleMute:
+    address: toggleMute
+    summary: Mute or unmute a live room speaker.
+    tags:
+      - name: live
+    messages:
+      ToggleMuteRequest:
+        name: ToggleMuteRequest
+        title: Toggle mute for speaker
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/ToggleMuteDto'
+  getLiveRoomState:
+    address: getLiveRoomState
+    summary: Fetch current live room state.
+    tags:
+      - name: live
+    messages:
+      GetLiveRoomStateRequest:
+        name: GetLiveRoomStateRequest
+        title: Get live room state
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/GetLiveRoomStateDto'
+  # ======================
+  # Channels: Signaling & Other
+  # ======================
+  leaveChat:
+    address: leaveChat
+    summary: Leave a Socket.IO room associated with a chat.
+    tags:
+      - name: messaging
+    messages:
+      LeaveChatRequest:
+        name: LeaveChatRequest
+        title: Leave chat room
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/JoinChatDto'
+  liveWebrtcOffer:
+    address: liveWebrtcOffer
+    summary: Exchange WebRTC SDP offer within live room.
+    tags:
+      - name: signaling
+    messages:
+      LiveWebrtcOfferRequest:
+        name: LiveWebrtcOfferRequest
+        title: Send live room SDP offer
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/LiveWebrtcOfferDto'
+      LiveWebrtcOfferEvent:
+        name: LiveWebrtcOfferEvent
+        title: Forwarded live room SDP offer
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/LiveWebrtcOfferMessage'
+  liveWebrtcAnswer:
+    address: liveWebrtcAnswer
+    summary: Exchange WebRTC SDP answer within live room.
+    tags:
+      - name: signaling
+    messages:
+      LiveWebrtcAnswerRequest:
+        name: LiveWebrtcAnswerRequest
+        title: Send live room SDP answer
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/LiveWebrtcAnswerDto'
+      LiveWebrtcAnswerEvent:
+        name: LiveWebrtcAnswerEvent
+        title: Forwarded live room SDP answer
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/LiveWebrtcAnswerMessage'
+  liveWebrtcIceCandidate:
+    address: liveWebrtcIceCandidate
+    summary: Exchange ICE candidates within live room.
+    tags:
+      - name: signaling
+    messages:
+      LiveWebrtcIceCandidateRequest:
+        name: LiveWebrtcIceCandidateRequest
+        title: Send live room ICE candidate
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/LiveWebrtcIceCandidateDto'
+      LiveWebrtcIceCandidateEvent:
+        name: LiveWebrtcIceCandidateEvent
+        title: Forwarded live room ICE candidate
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/LiveWebrtcIceCandidateMessage'
+  webrtcOffer:
+    address: webrtcOffer
+    summary: Exchange 1:1 call SDP offer.
+    tags:
+      - name: signaling
+    messages:
+      WebrtcOfferRequest:
+        name: WebrtcOfferRequest
+        title: Send WebRTC offer
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/WebrtcOfferDto'
+      WebrtcOfferEvent:
+        name: WebrtcOfferEvent
+        title: Forwarded WebRTC offer
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/WebrtcOfferMessage'
+  webrtcAnswer:
+    address: webrtcAnswer
+    summary: Exchange 1:1 call SDP answer.
+    tags:
+      - name: signaling
+    messages:
+      WebrtcAnswerRequest:
+        name: WebrtcAnswerRequest
+        title: Send WebRTC answer
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/WebrtcAnswerDto'
+      WebrtcAnswerEvent:
+        name: WebrtcAnswerEvent
+        title: Forwarded WebRTC answer
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/WebrtcAnswerMessage'
+  webrtcIceCandidate:
+    address: webrtcIceCandidate
+    summary: Exchange 1:1 call ICE candidates.
+    tags:
+      - name: signaling
+    messages:
+      WebrtcIceCandidateRequest:
+        name: WebrtcIceCandidateRequest
+        title: Send WebRTC ICE candidate
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/WebrtcIceCandidateDto'
+      WebrtcIceCandidateEvent:
+        name: WebrtcIceCandidateEvent
+        title: Forwarded WebRTC ICE candidate
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/WebrtcIceCandidateMessage'
+  chat.messages.fetch:
+    address: 'chat:{chatId}:messages:fetch'
+    description: >
+      Server emits fetched messages to all users in the Socket.IO room named
+      `chat:{chatId}:messages:fetch`, where `chatId` is the UUID of the chat.
+    tags:
+      - name: messaging
+    messages:
+      MessagesFetchEvent:
+        name: MessagesFetchEvent
+        title: Messages batch fetched
+        summary: >
+          Emitted after getMessages. Two arguments are sent (messages, nextCursor)
+          and represented here as a single object.
+        contentType: application/json
+        payload:
+          type: object
+          additionalProperties: false
+          properties:
+            messages:
+              type: array
+              items:
+                $ref: '#/components/schemas/Message'
+            nextCursor:
+              type: string
+              nullable: true
+  chat.message.create:
+    address: 'chat:{chatId}:message:create'
+    summary: Server broadcast for newly created message in chat-specific room `chat:{chatId}`.
+    tags:
+      - name: messaging
+    messages:
+      MessageCreateEvent:
+        name: MessageCreateEvent
+        title: New message created
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/Message'
+  chat.message.update:
+    address: 'chat:{chatId}:message:update'
+    summary: Server broadcast when a message in chat `{chatId}` is updated.
+    tags:
+      - name: messaging
+    messages:
+      MessageUpdateEvent:
+        name: MessageUpdateEvent
+        title: Message updated
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/Message'
+  chat.messages.update:
+    address: 'chat:{chatId}:messages:update'
+    description: >
+      Emitted when messages were updated (delete, mark-as-read, etc).
+      Payload can be either array of Message or BatchPayload-like object.
+      Broadcast occurs on Socket.IO room `chat:{chatId}:messages:update`.
+    tags:
+      - name: messaging
+    messages:
+      MessagesUpdateEvent:
+        name: MessagesUpdateEvent
+        title: Messages updated
+        contentType: application/json
+        payload:
+          oneOf:
+            - type: array
+              items:
+                $ref: '#/components/schemas/Message'
+            - $ref: '#/components/schemas/BatchPayload'
+  chats.folder.broadcast:
+    address: 'chats:{folder}'
+    summary: Server broadcast when chats for folder `{folder}` are fetched.
+    tags:
+      - name: chats
+    messages:
+      ChatsFetchEvent:
+        name: ChatsFetchEvent
+        title: Chats fetched for folder
+        contentType: application/json
+        payload:
+          type: array
+          items:
+            $ref: '#/components/schemas/FoundedChat'
+  chats.query.search:
+    address: 'chats:query:{query}:search'
+    summary: Server broadcast with search results for query string `{query}`.
+    tags:
+      - name: chats
+    messages:
+      ChatsSearchEvent:
+        name: ChatsSearchEvent
+        title: Chats search result
+        contentType: application/json
+        payload:
+          type: array
+          items:
+            $ref: '#/components/schemas/FoundedChat'
+  folders.user.fetch:
+    address: 'folders:user:{userId}:fetch'
+    summary: Server broadcast for folder list updates for user `{userId}`.
+    tags:
+      - name: folders
+    messages:
+      FoldersFetchEvent:
+        name: FoldersFetchEvent
+        title: Folders fetched for user
+        contentType: application/json
+        payload:
+          type: array
+          items:
+            $ref: '#/components/schemas/Folder'
+  user.statusUpdate:
+    address: 'user:{userId}:statusUpdate'
+    summary: Server push with online status changes for tracked user `{userId}`.
+    tags:
+      - name: presence
+    messages:
+      UserStatusUpdateEvent:
+        name: UserStatusUpdateEvent
+        title: User status updated
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/UserStatusUpdate'
+  incomingCall:
+    address: incomingCall
+    summary: Notify callee about incoming call.
+    tags:
+      - name: calls
+    messages:
+      IncomingCallEvent:
+        name: IncomingCallEvent
+        title: Incoming call notification
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/CallNotification'
+  callResponse:
+    address: callResponse
+    summary: Notify caller about callee response.
+    tags:
+      - name: calls
+    messages:
+      CallResponseEvent:
+        name: CallResponseEvent
+        title: Call response notification
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/CallResponsePayload'
+  callEnded:
+    address: callEnded
+    summary: Notify participants that call ended.
+    tags:
+      - name: calls
+    messages:
+      CallEndedEvent:
+        name: CallEndedEvent
+        title: Call ended notification
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/CallEndPayload'
+  voiceChatParticipantJoined:
+    address: voiceChatParticipantJoined
+    summary: Notify participants when someone joins voice chat.
+    tags:
+      - name: calls
+    messages:
+      VoiceChatParticipantJoinedEvent:
+        name: VoiceChatParticipantJoinedEvent
+        title: Voice chat participant joined
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/VoiceChatParticipantEvent'
+  voiceChatParticipantLeft:
+    address: voiceChatParticipantLeft
+    summary: Notify participants when someone leaves voice chat.
+    tags:
+      - name: calls
+    messages:
+      VoiceChatParticipantLeftEvent:
+        name: VoiceChatParticipantLeftEvent
+        title: Voice chat participant left
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/VoiceChatParticipantEvent'
+  liveState:
+    address: liveState
+    summary: Broadcast live room state snapshots.
+    tags:
+      - name: live
+    messages:
+      LiveStateEvent:
+        name: LiveStateEvent
+        title: Live room state change
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/LiveRoomState'
+# =========================================
+# Operations — inbound commands by domain
+# =========================================
+operations:
+  # Messaging
+  joinChatCommand:
+    action: receive
+    summary: Client emits Socket.IO event "joinChat" to join a chat room.
+    channel:
+      $ref: '#/channels/joinChat'
+    messages:
+      - $ref: '#/channels/joinChat/messages/JoinChatRequest'
+  getMessagesCommand:
+    action: receive
+    summary: Client emits "getMessages" to request a messages page; server later responds on chat:{chatId}:messages:fetch.
+    channel:
+      $ref: '#/channels/getMessages'
+    messages:
+      - $ref: '#/channels/getMessages/messages/GetMessagesRequest'
+  createMessageCommand:
+    action: receive
+    summary: Client emits "createMessage" to create a new chat message.
+    channel:
+      $ref: '#/channels/createMessage'
+    messages:
+      - $ref: '#/channels/createMessage/messages/CreateMessageRequest'
+  editMessageCommand:
+    action: receive
+    summary: Client emits "editMessage" to update an existing message.
+    channel:
+      $ref: '#/channels/editMessage'
+    messages:
+      - $ref: '#/channels/editMessage/messages/EditMessageRequest'
+  deleteMessageCommand:
+    action: receive
+    summary: Client emits "deleteMessage" to remove one or more messages.
+    channel:
+      $ref: '#/channels/deleteMessage'
+    messages:
+      - $ref: '#/channels/deleteMessage/messages/DeleteMessageRequest'
+  createReactionCommand:
+    action: receive
+    summary: Client emits "createReaction" to add or toggle a reaction.
+    channel:
+      $ref: '#/channels/createReaction'
+    messages:
+      - $ref: '#/channels/createReaction/messages/CreateReactionRequest'
+  pinMessageCommand:
+    action: receive
+    summary: Client emits "pinMessage" to pin or unpin a message.
+    channel:
+      $ref: '#/channels/pinMessage'
+    messages:
+      - $ref: '#/channels/pinMessage/messages/PinMessageRequest'
+  fetchChatsCommand:
+    action: receive
+    summary: Client emits "fetchChats" to retrieve chats for a folder.
+    channel:
+      $ref: '#/channels/fetchChats'
+    messages:
+      - $ref: '#/channels/fetchChats/messages/FetchChatsRequest'
+  searchChatsCommand:
+    action: receive
+    summary: Client emits "searchChats" to search chats by name.
+    channel:
+      $ref: '#/channels/searchChats'
+    messages:
+      - $ref: '#/channels/searchChats/messages/SearchChatsRequest'
+  requestFoldersCommand:
+    action: receive
+    summary: Client emits "folders" to fetch folders for the authenticated user.
+    channel:
+      $ref: '#/channels/folders'
+    messages:
+      - $ref: '#/channels/folders/messages/FoldersFetchRequest'
+  initiateCallCommand:
+    action: receive
+    summary: Client emits "initiateCall" to start a 1:1 call.
+    channel:
+      $ref: '#/channels/initiateCall'
+    messages:
+      - $ref: '#/channels/initiateCall/messages/InitiateCallRequest'
+  respondToCallCommand:
+    action: receive
+    summary: Callee emits "respondToCall" to accept or reject an incoming call.
+    channel:
+      $ref: '#/channels/respondToCall'
+    messages:
+      - $ref: '#/channels/respondToCall/messages/CallResponseRequest'
+  endCallCommand:
+    action: receive
+    summary: Participant emits "endCall" to terminate an active call.
+    channel:
+      $ref: '#/channels/endCall'
+    messages:
+      - $ref: '#/channels/endCall/messages/EndCallRequest'
+  joinVoiceChatCommand:
+    action: receive
+    summary: Client emits "joinVoiceChat" to join a group/channel voice chat.
+    channel:
+      $ref: '#/channels/joinVoiceChat'
+    messages:
+      - $ref: '#/channels/joinVoiceChat/messages/JoinVoiceChatRequest'
+  leaveVoiceChatCommand:
+    action: receive
+    summary: Client emits "leaveVoiceChat" to exit a group/channel voice chat.
+    channel:
+      $ref: '#/channels/leaveVoiceChat'
+    messages:
+      - $ref: '#/channels/leaveVoiceChat/messages/LeaveVoiceChatRequest'
+  startLiveCommand:
+    action: receive
+    summary: Moderator emits "startLive" to start a live room.
+    channel:
+      $ref: '#/channels/startLive'
+    messages:
+      - $ref: '#/channels/startLive/messages/StartLiveRequest'
+  stopLiveCommand:
+    action: receive
+    summary: Moderator emits "stopLive" to finish a live room.
+    channel:
+      $ref: '#/channels/stopLive'
+    messages:
+      - $ref: '#/channels/stopLive/messages/StopLiveRequest'
+  joinLiveCommand:
+    action: receive
+    summary: Client emits "joinLive" to become a listener in the live room.
+    channel:
+      $ref: '#/channels/joinLive'
+    messages:
+      - $ref: '#/channels/joinLive/messages/JoinLiveRequest'
+  leaveLiveCommand:
+    action: receive
+    summary: Client emits "leaveLive" to exit the live room.
+    channel:
+      $ref: '#/channels/leaveLive'
+    messages:
+      - $ref: '#/channels/leaveLive/messages/LeaveLiveRequest'
+  raiseHandCommand:
+    action: receive
+    summary: Listener emits "raiseHand" to request speaking privileges.
+    channel:
+      $ref: '#/channels/raiseHand'
+    messages:
+      - $ref: '#/channels/raiseHand/messages/RaiseHandRequest'
+  approveSpeakerCommand:
+    action: receive
+    summary: Moderator emits "approveSpeaker" to promote a listener.
+    channel:
+      $ref: '#/channels/approveSpeaker'
+    messages:
+      - $ref: '#/channels/approveSpeaker/messages/ApproveSpeakerRequest'
+  revokeSpeakerCommand:
+    action: receive
+    summary: Moderator emits "revokeSpeaker" to demote a speaker.
+    channel:
+      $ref: '#/channels/revokeSpeaker'
+    messages:
+      - $ref: '#/channels/revokeSpeaker/messages/RevokeSpeakerRequest'
+  toggleMuteCommand:
+    action: receive
+    summary: Moderator emits "toggleMute" to update speaker mute state.
+    channel:
+      $ref: '#/channels/toggleMute'
+    messages:
+      - $ref: '#/channels/toggleMute/messages/ToggleMuteRequest'
+  getLiveRoomStateCommand:
+    action: receive
+    summary: Client emits "getLiveRoomState" to fetch the current live room snapshot.
+    channel:
+      $ref: '#/channels/getLiveRoomState'
+    messages:
+      - $ref: '#/channels/getLiveRoomState/messages/GetLiveRoomStateRequest'
+  leaveChatCommand:
+    action: receive
+    summary: Client emits "leaveChat" to leave a Socket.IO room.
+    channel:
+      $ref: '#/channels/leaveChat'
+    messages:
+      - $ref: '#/channels/leaveChat/messages/LeaveChatRequest'
+  liveWebrtcOfferCommand:
+    action: receive
+    summary: Participant emits "liveWebrtcOffer" to forward SDP offers in live rooms.
+    channel:
+      $ref: '#/channels/liveWebrtcOffer'
+    messages:
+      - $ref: '#/channels/liveWebrtcOffer/messages/LiveWebrtcOfferRequest'
+  liveWebrtcAnswerCommand:
+    action: receive
+    summary: Participant emits "liveWebrtcAnswer" to forward SDP answers in live rooms.
+    channel:
+      $ref: '#/channels/liveWebrtcAnswer'
+    messages:
+      - $ref: '#/channels/liveWebrtcAnswer/messages/LiveWebrtcAnswerRequest'
+  liveWebrtcIceCandidateCommand:
+    action: receive
+    summary: Participant emits "liveWebrtcIceCandidate" to exchange ICE candidates in live rooms.
+    channel:
+      $ref: '#/channels/liveWebrtcIceCandidate'
+    messages:
+      - $ref: '#/channels/liveWebrtcIceCandidate/messages/LiveWebrtcIceCandidateRequest'
+  webrtcOfferCommand:
+    action: receive
+    summary: Client emits "webrtcOffer" during 1:1 calls to forward SDP offers.
+    channel:
+      $ref: '#/channels/webrtcOffer'
+    messages:
+      - $ref: '#/channels/webrtcOffer/messages/WebrtcOfferRequest'
+  webrtcAnswerCommand:
+    action: receive
+    summary: Client emits "webrtcAnswer" during 1:1 calls to forward SDP answers.
+    channel:
+      $ref: '#/channels/webrtcAnswer'
+    messages:
+      - $ref: '#/channels/webrtcAnswer/messages/WebrtcAnswerRequest'
+  webrtcIceCandidateCommand:
+    action: receive
+    summary: Client emits "webrtcIceCandidate" during 1:1 calls to exchange ICE candidates.
+    channel:
+      $ref: '#/channels/webrtcIceCandidate'
+    messages:
+      - $ref: '#/channels/webrtcIceCandidate/messages/WebrtcIceCandidateRequest'
+  # Messaging events
+  messagesFetchEvent:
+    action: send
+    summary: Server emits "chat:{chatId}:messages:fetch" with batched history.
+    channel:
+      $ref: '#/channels/chat.messages.fetch'
+    messages:
+      - $ref: '#/channels/chat.messages.fetch/messages/MessagesFetchEvent'
+  messageCreateEvent:
+    action: send
+    summary: Server emits "chat:{chatId}:message:create" after a message is created.
+    channel:
+      $ref: '#/channels/chat.message.create'
+    messages:
+      - $ref: '#/channels/chat.message.create/messages/MessageCreateEvent'
+  messageUpdateEvent:
+    action: send
+    summary: Server emits "chat:{chatId}:message:update" after a message changes.
+    channel:
+      $ref: '#/channels/chat.message.update'
+    messages:
+      - $ref: '#/channels/chat.message.update/messages/MessageUpdateEvent'
+  messagesUpdateEvent:
+    action: send
+    summary: Server emits "chat:{chatId}:messages:update" after bulk operations (delete, read, etc.).
+    channel:
+      $ref: '#/channels/chat.messages.update'
+    messages:
+      - $ref: '#/channels/chat.messages.update/messages/MessagesUpdateEvent'
+  # Chat discovery / folder events
+  chatsFetchEvent:
+    action: send
+    summary: Server emits "chats:{folder}" containing folder chat listings.
+    channel:
+      $ref: '#/channels/chats.folder.broadcast'
+    messages:
+      - $ref: '#/channels/chats.folder.broadcast/messages/ChatsFetchEvent'
+  chatsSearchEvent:
+    action: send
+    summary: Server emits "chats:query:{query}:search" with search results.
+    channel:
+      $ref: '#/channels/chats.query.search'
+    messages:
+      - $ref: '#/channels/chats.query.search/messages/ChatsSearchEvent'
+  foldersFetchEvent:
+    action: send
+    summary: Server emits "folders:user:{userId}:fetch" whenever folder lists update.
+    channel:
+      $ref: '#/channels/folders.user.fetch'
+    messages:
+      - $ref: '#/channels/folders.user.fetch/messages/FoldersFetchEvent'
+  # Presence
+  userStatusUpdateEvent:
+    action: send
+    summary: Server emits "user:{userId}:statusUpdate" on presence changes.
+    channel:
+      $ref: '#/channels/user.statusUpdate'
+    messages:
+      - $ref: '#/channels/user.statusUpdate/messages/UserStatusUpdateEvent'
+  incomingCallEvent:
+    action: send
+    summary: Server emits "incomingCall" to notify call recipients.
+    channel:
+      $ref: '#/channels/incomingCall'
+    messages:
+      - $ref: '#/channels/incomingCall/messages/IncomingCallEvent'
+  callResponseEvent:
+    action: send
+    summary: Server emits "callResponse" to inform caller about callee decision.
+    channel:
+      $ref: '#/channels/callResponse'
+    messages:
+      - $ref: '#/channels/callResponse/messages/CallResponseEvent'
+  callEndedEvent:
+    action: send
+    summary: Server emits "callEnded" when a call terminates.
+    channel:
+      $ref: '#/channels/callEnded'
+    messages:
+      - $ref: '#/channels/callEnded/messages/CallEndedEvent'
+  # Voice chat & live room events
+  voiceChatParticipantJoinedEvent:
+    action: send
+    summary: Server emits "voiceChatParticipantJoined" when someone joins a voice chat.
+    channel:
+      $ref: '#/channels/voiceChatParticipantJoined'
+    messages:
+      - $ref: '#/channels/voiceChatParticipantJoined/messages/VoiceChatParticipantJoinedEvent'
+  voiceChatParticipantLeftEvent:
+    action: send
+    summary: Server emits "voiceChatParticipantLeft" when someone leaves a voice chat.
+    channel:
+      $ref: '#/channels/voiceChatParticipantLeft'
+    messages:
+      - $ref: '#/channels/voiceChatParticipantLeft/messages/VoiceChatParticipantLeftEvent'
+  liveStateEvent:
+    action: send
+    summary: Server emits "liveState" snapshots to participants and watchers.
+    channel:
+      $ref: '#/channels/liveState'
+    messages:
+      - $ref: '#/channels/liveState/messages/LiveStateEvent'
+  # Signaling events
+  liveWebrtcOfferEvent:
+    action: send
+    summary: Server forwards "liveWebrtcOffer" payloads to targeted peers.
+    channel:
+      $ref: '#/channels/liveWebrtcOffer'
+    messages:
+      - $ref: '#/channels/liveWebrtcOffer/messages/LiveWebrtcOfferEvent'
+  liveWebrtcAnswerEvent:
+    action: send
+    summary: Server forwards "liveWebrtcAnswer" payloads to targeted peers.
+    channel:
+      $ref: '#/channels/liveWebrtcAnswer'
+    messages:
+      - $ref: '#/channels/liveWebrtcAnswer/messages/LiveWebrtcAnswerEvent'
+  liveWebrtcIceCandidateEvent:
+    action: send
+    summary: Server forwards "liveWebrtcIceCandidate" payloads to targeted peers.
+    channel:
+      $ref: '#/channels/liveWebrtcIceCandidate'
+    messages:
+      - $ref: '#/channels/liveWebrtcIceCandidate/messages/LiveWebrtcIceCandidateEvent'
+  webrtcOfferEvent:
+    action: send
+    summary: Server forwards "webrtcOffer" payloads between 1:1 call participants.
+    channel:
+      $ref: '#/channels/webrtcOffer'
+    messages:
+      - $ref: '#/channels/webrtcOffer/messages/WebrtcOfferEvent'
+  webrtcAnswerEvent:
+    action: send
+    summary: Server forwards "webrtcAnswer" payloads between 1:1 call participants.
+    channel:
+      $ref: '#/channels/webrtcAnswer'
+    messages:
+      - $ref: '#/channels/webrtcAnswer/messages/WebrtcAnswerEvent'
+  webrtcIceCandidateEvent:
+    action: send
+    summary: Server forwards "webrtcIceCandidate" payloads between 1:1 call participants.
+    channel:
+      $ref: '#/channels/webrtcIceCandidate'
+    messages:
+      - $ref: '#/channels/webrtcIceCandidate/messages/WebrtcIceCandidateEvent'
+components:
+  schemas:
+    ChatIdParam:
+      type: string
+      description: Chat ID (UUID v4)
+      pattern: '^[0-9a-fA-F-]{36}$'
+    UserIdParam:
+      type: string
+      description: User ID (UUID v4)
+      pattern: '^[0-9a-fA-F-]{36}$'
+    FolderSlugParam:
+      type: string
+      description: Folder identifier slug or name.
+      minLength: 1
+    SearchQueryParam:
+      type: string
+      description: Chat search query string.
+    EmptyPayload:
+      type: object
+      description: No payload is required.
+      additionalProperties: false
+    JoinChatDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+    FetchMessageDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - cursor
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        cursor:
+          type: string
+          description: Cursor for pagination (message id or timestamp)
+    CreateMessageDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - messageType
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        content:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        mediaId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+          nullable: true
+        url:
+          type: string
+          format: uri
+          nullable: true
+        duration:
+          type: number
+          nullable: true
+        size:
+          type: number
+          nullable: true
+        messageType:
+          $ref: '#/components/schemas/MessageType'
+        mediaType:
+          $ref: '#/components/schemas/MediaType'
+        repliedToId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+          nullable: true
+    UpdateMessageDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - messageId
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        messageId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        content:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        mediaId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+          nullable: true
+        url:
+          type: string
+          format: uri
+          nullable: true
+        duration:
+          type: number
+          nullable: true
+        mediaType:
+          $ref: '#/components/schemas/MediaType'
+    DeleteMessageDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - messageIds
+        - delete_both
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        messageIds:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            pattern: '^[0-9a-fA-F-]{36}$'
+        delete_both:
+          type: boolean
+    CreateReactionDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - messageId
+        - emoji
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        messageId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        emoji:
+          type: string
+    PinMessageDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - messageId
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        messageId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+    FetchChatsDto:
+      type: object
+      additionalProperties: false
+      required:
+        - folder
+      properties:
+        folder:
+          type: string
+          minLength: 1
+          description: Folder identifier to fetch chats from.
+    ChatSearchDto:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          nullable: true
+          description: Optional substring search query.
+    FoundedChat:
+      type: object
+      additionalProperties: true
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        name:
+          type: string
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+        lastMessage:
+          allOf:
+            - $ref: '#/components/schemas/Message'
+          nullable: true
+        lastMessageDate:
+          type: string
+          format: date-time
+          nullable: true
+        lengthUnread:
+          type: integer
+          nullable: true
+        lastSeen:
+          type: string
+          format: date-time
+          nullable: true
+        isOnline:
+          type: boolean
+          nullable: true
+        type:
+          $ref: '#/components/schemas/ChatRole'
+    Folder:
+      type: object
+      description: Folder entity with nested chats.
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        name:
+          type: string
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+        userId:
+          $ref: '#/components/schemas/UserIdParam'
+        chats:
+          type: array
+          items:
+            type: object
+            description: Chat entity including members/messages (structure may vary).
+            additionalProperties: true
+    UserStatusUpdate:
+      type: object
+      additionalProperties: false
+      required:
+        - userId
+        - isOnline
+      properties:
+        userId:
+          $ref: '#/components/schemas/UserIdParam'
+        isOnline:
+          type: boolean
+        lastSeen:
+          type: string
+          format: date-time
+          nullable: true
+    InitiateCallDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        isVideoCall:
+          type: boolean
+          default: false
+    CallResponseDto:
+      type: object
+      additionalProperties: false
+      required:
+        - callId
+        - action
+      properties:
+        callId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        action:
+          $ref: '#/components/schemas/CallAction'
+    CallEndDto:
+      type: object
+      additionalProperties: false
+      required:
+        - callId
+      properties:
+        callId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+    ChatOnlyDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+    ChatAndUserDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - userId
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        userId:
+          $ref: '#/components/schemas/UserIdParam'
+    JoinVoiceChatDto:
+      allOf:
+        - $ref: '#/components/schemas/ChatOnlyDto'
+    LeaveVoiceChatDto:
+      allOf:
+        - $ref: '#/components/schemas/ChatOnlyDto'
+    StartLiveDto:
+      allOf:
+        - $ref: '#/components/schemas/ChatOnlyDto'
+    StopLiveDto:
+      allOf:
+        - $ref: '#/components/schemas/ChatOnlyDto'
+    JoinLiveDto:
+      allOf:
+        - $ref: '#/components/schemas/ChatOnlyDto'
+    LeaveLiveDto:
+      allOf:
+        - $ref: '#/components/schemas/ChatOnlyDto'
+    RaiseHandDto:
+      allOf:
+        - $ref: '#/components/schemas/ChatOnlyDto'
+    ApproveSpeakerDto:
+      allOf:
+        - $ref: '#/components/schemas/ChatAndUserDto'
+    RevokeSpeakerDto:
+      allOf:
+        - $ref: '#/components/schemas/ChatAndUserDto'
+    ToggleMuteDto:
+      allOf:
+        - $ref: '#/components/schemas/ChatAndUserDto'
+        - type: object
+          required:
+            - isMuted
+          properties:
+            isMuted:
+              type: boolean
+    GetLiveRoomStateDto:
+      allOf:
+        - $ref: '#/components/schemas/ChatOnlyDto'
+    LiveWebrtcOfferDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - toUserId
+        - sdp
+        - type
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        toUserId:
+          $ref: '#/components/schemas/UserIdParam'
+        sdp:
+          type: string
+        type:
+          $ref: '#/components/schemas/CallType'
+    LiveWebrtcOfferMessage:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - fromUserId
+        - sdp
+        - type
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        fromUserId:
+          $ref: '#/components/schemas/UserIdParam'
+        sdp:
+          type: string
+        type:
+          $ref: '#/components/schemas/CallType'
+    LiveWebrtcAnswerDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - toUserId
+        - sdp
+        - type
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        toUserId:
+          $ref: '#/components/schemas/UserIdParam'
+        sdp:
+          type: string
+        type:
+          $ref: '#/components/schemas/CallType'
+    LiveWebrtcAnswerMessage:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - fromUserId
+        - sdp
+        - type
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        fromUserId:
+          $ref: '#/components/schemas/UserIdParam'
+        sdp:
+          type: string
+        type:
+          $ref: '#/components/schemas/CallType'
+    LiveWebrtcIceCandidateDto:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - toUserId
+        - candidate
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        toUserId:
+          $ref: '#/components/schemas/UserIdParam'
+        candidate:
+          type: object
+          description: Serialized ICE candidate.
+          additionalProperties: true
+    LiveWebrtcIceCandidateMessage:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - fromUserId
+        - candidate
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        fromUserId:
+          $ref: '#/components/schemas/UserIdParam'
+        candidate:
+          type: object
+          description: Serialized ICE candidate.
+          additionalProperties: true
+    WebrtcOfferDto:
+      type: object
+      additionalProperties: false
+      required:
+        - callId
+        - toUserId
+        - sdp
+        - type
+      properties:
+        callId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        toUserId:
+          $ref: '#/components/schemas/UserIdParam'
+        sdp:
+          type: string
+        type:
+          $ref: '#/components/schemas/CallType'
+    WebrtcOfferMessage:
+      type: object
+      additionalProperties: false
+      required:
+        - callId
+        - fromUserId
+        - sdp
+        - type
+      properties:
+        callId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        fromUserId:
+          $ref: '#/components/schemas/UserIdParam'
+        sdp:
+          type: string
+        type:
+          $ref: '#/components/schemas/CallType'
+    WebrtcAnswerDto:
+      type: object
+      additionalProperties: false
+      required:
+        - callId
+        - toUserId
+        - sdp
+        - type
+      properties:
+        callId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        toUserId:
+          $ref: '#/components/schemas/UserIdParam'
+        sdp:
+          type: string
+        type:
+          $ref: '#/components/schemas/CallType'
+    WebrtcAnswerMessage:
+      type: object
+      additionalProperties: false
+      required:
+        - callId
+        - fromUserId
+        - sdp
+        - type
+      properties:
+        callId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        fromUserId:
+          $ref: '#/components/schemas/UserIdParam'
+        sdp:
+          type: string
+        type:
+          $ref: '#/components/schemas/CallType'
+    WebrtcIceCandidateDto:
+      type: object
+      additionalProperties: false
+      required:
+        - callId
+        - toUserId
+        - candidate
+      properties:
+        callId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        toUserId:
+          $ref: '#/components/schemas/UserIdParam'
+        candidate:
+          type: object
+          description: Serialized ICE candidate.
+          additionalProperties: true
+    WebrtcIceCandidateMessage:
+      type: object
+      additionalProperties: false
+      required:
+        - callId
+        - fromUserId
+        - candidate
+      properties:
+        callId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        fromUserId:
+          $ref: '#/components/schemas/UserIdParam'
+        candidate:
+          type: object
+          description: Serialized ICE candidate.
+          additionalProperties: true
+    CallNotification:
+      type: object
+      additionalProperties: false
+      required:
+        - callId
+        - callerId
+        - callerName
+        - chatId
+        - chatName
+        - isVideoCall
+        - timestamp
+      properties:
+        callId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        callerId:
+          $ref: '#/components/schemas/UserIdParam'
+        callerName:
+          type: string
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        chatName:
+          type: string
+        isVideoCall:
+          type: boolean
+        timestamp:
+          type: integer
+          description: Unix epoch milliseconds.
+    CallResponsePayload:
+      type: object
+      additionalProperties: false
+      required:
+        - callId
+        - status
+        - callerId
+        - participantIds
+      properties:
+        callId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        status:
+          type: string
+          enum:
+            - active
+            - rejected
+        callerId:
+          $ref: '#/components/schemas/UserIdParam'
+        participantIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserIdParam'
+    CallEndPayload:
+      type: object
+      additionalProperties: false
+      required:
+        - callId
+        - status
+        - endedBy
+        - participantIds
+      properties:
+        callId:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        status:
+          type: string
+          enum:
+            - ended
+        endedBy:
+          $ref: '#/components/schemas/UserIdParam'
+        participantIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserIdParam'
+    VoiceChatParticipantEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - userId
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        userId:
+          $ref: '#/components/schemas/UserIdParam'
+    LiveParticipant:
+      type: object
+      additionalProperties: false
+      required:
+        - userId
+        - role
+        - isMuted
+      properties:
+        userId:
+          $ref: '#/components/schemas/UserIdParam'
+        name:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+        role:
+          $ref: '#/components/schemas/LiveRole'
+        isMuted:
+          type: boolean
+    LiveRoomState:
+      type: object
+      additionalProperties: false
+      required:
+        - chatId
+        - isLive
+        - speakers
+        - listeners
+        - muted
+      properties:
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        isLive:
+          type: boolean
+        hostId:
+          $ref: '#/components/schemas/UserIdParam'
+          nullable: true
+        speakers:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserIdParam'
+        listeners:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserIdParam'
+        muted:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserIdParam'
+        startedAt:
+          type: integer
+          nullable: true
+          description: Unix epoch milliseconds of live start.
+        participants:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/LiveParticipant'
+    BatchPayload:
+      type: object
+      description: Prisma.BatchPayload-like shape
+      additionalProperties: false
+      properties:
+        count:
+          type: integer
+          minimum: 0
+    Message:
+      type: object
+      description: Simplified message shape (subset of fields)
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          pattern: '^[0-9a-fA-F-]{36}$'
+        chatId:
+          $ref: '#/components/schemas/ChatIdParam'
+        userId:
+          $ref: '#/components/schemas/UserIdParam'
+        content:
+          type: string
+          nullable: true
+        messageType:
+          $ref: '#/components/schemas/MessageType'
+        status:
+          $ref: '#/components/schemas/MessageStatus'
+        isPinned:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        media:
+          type: array
+          items:
+            $ref: '#/components/schemas/Media'
+        videoMessages:
+          type: array
+          items:
+            $ref: '#/components/schemas/VideoMessage'
+        voiceMessages:
+          type: array
+          items:
+            $ref: '#/components/schemas/VoiceMessage'
+        repliedToId:
+          type: string
+          nullable: true
+    Media:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+          format: uri
+        duration:
+          type: integer
+          nullable: true
+        size:
+          type: integer
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        type:
+          $ref: '#/components/schemas/MediaType'
+    VoiceMessage:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+          format: uri
+        duration:
+          type: integer
+        size:
+          type: integer
+    VideoMessage:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+          format: uri
+        duration:
+          type: integer
+        size:
+          type: integer
+    MessageType:
+      type: string
+      enum:
+        - TEXT
+        - VIDEO
+        - VOICE
+        - FILE
+    MediaType:
+      type: string
+      enum:
+        - IMAGE
+        - VIDEO
+        - AUDIO
+        - FILE
+    MessageStatus:
+      type: string
+      enum:
+        - PENDING
+        - SENT
+        - READ
+    ChatRole:
+      type: string
+      enum:
+        - DIALOG
+        - CHANNEL
+        - GROUP
+    CallAction:
+      type: string
+      enum:
+        - accept
+        - reject
+    CallStatus:
+      type: string
+      enum:
+        - initiated
+        - ringing
+        - active
+        - ended
+    CallType:
+      type: string
+      enum:
+        - offer
+        - answer
+    LiveRole:
+      type: string
+      enum:
+        - host
+        - speaker
+        - listener

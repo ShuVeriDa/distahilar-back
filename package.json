@@ -28,7 +28,9 @@
     "migrate:deploy": "prisma migrate deploy",
     "migrate:status": "prisma migrate status",
     "seed": "ts-node prisma/seed.ts",
-    "seed2": "ts-node prisma/seed2.ts"
+    "seed2": "ts-node prisma/seed2.ts",
+    "docs:asyncapi:preview": "npx --yes @asyncapi/cli@latest start asyncapi.yaml --port 9090 --no-open",
+    "docs:asyncapi:build": "npx --yes @asyncapi/cli@latest generate fromTemplate asyncapi.yaml @asyncapi/html-template -o docs/asyncapi"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

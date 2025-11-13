@@ -2,6 +2,8 @@
 
 English | [Русский ниже](#русский)
 
+Looking for the web client? Check out the [DistaHilar Frontend](../front/README.md).
+
 ## Overview
 
 DistaHilar Backend powers a modern, real‑time messaging experience inspired by Telegram. It provides authentication, chats, messages, reactions, media uploads, folders, contacts, and WebSocket gateways for live updates, plus WebRTC signaling for calls and live rooms.
@@ -94,6 +96,12 @@ Swagger is available in non‑production mode at:
 ```
 http://localhost:9555/api
 ```
+
+### AsyncAPI (WebSocket spec)
+
+- The Socket.IO/WS contract lives in `asyncapi.yaml`.
+- Channels and operations are grouped into logical sections (Messaging, Chats & Folders, Calls, Live, Signaling) with inline comments for easier navigation.
+- Open the file in [AsyncAPI Studio](https://studio.asyncapi.com/) or any v3.0 compatible tooling to explore schemas, payloads, and event flows.
 
 ## Production Notes
 
@@ -189,6 +197,12 @@ npm run start:dev
 - `NODE_ENV=production` отключает Swagger.
 - Для serverless используйте пул соединений в `DATABASE_URL`.
 - Настройте CORS и cookie‑параметры согласно фронтенду.
+
+### AsyncAPI (WebSocket-спецификация)
+
+- Контракт Socket.IO/WS описан в файле `asyncapi.yaml`.
+- Каналы и операции разбиты по тематическим секциям (Messaging, Chats & Folders, Calls, Live, Signaling) с поясняющими комментариями для удобной навигации.
+- Откройте файл в [AsyncAPI Studio](https://studio.asyncapi.com/) или другом инструменте с поддержкой AsyncAPI 3.0, чтобы изучить схемы и события.
 
 ### Лицензия и атрибуция
 
