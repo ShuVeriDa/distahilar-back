@@ -32,8 +32,6 @@ export class FileService {
     options?: { compress?: boolean },
   ): Promise<CloudinaryAudioResponse> {
     return new Promise((resolve, reject) => {
-      console.log({ file });
-
       if (!file || !file.buffer) {
         return reject(new Error('Invalid file buffer.'));
       }
@@ -100,7 +98,6 @@ export class FileService {
 
     for (const file of files) {
       const result = await this.uploadToCloudinary(file, folder, options);
-      console.log({ file, result });
 
       results.push({
         url: result.secure_url,
