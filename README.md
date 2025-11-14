@@ -109,6 +109,45 @@ http://localhost:9555/api
 - Ensure `DATABASE_URL` uses connection pooling for serverless platforms.
 - Configure CORS using `FRONTEND_URL` and cookies if needed.
 
+## Why this project
+
+DistaHilar was built as a portfolio project to demonstrate how I approach **production‑like backend engineering** for a complex real‑time messenger: from HTTP and WebSocket APIs to data modeling, performance, and integrations with external services.
+
+## My Role
+
+- Solo backend developer: architecture, modules, database schema, and real‑time communication.
+- Focus on:
+  - Clean, modular NestJS structure (auth, chats, messages, folders, calls, media).
+  - Real‑time messaging and presence via Socket.IO gateways.
+  - Reliable WebRTC signaling, media uploads, and background tasks.
+
+## Key Technical Decisions
+
+- **Modular monolith** in NestJS: clear separation into domains (`auth`, `user`, `chat`, `message`, `folder`, `contact`, `call`, `community`) to keep code maintainable and testable.
+- **Prisma ORM**: explicit data model with relations optimized for messaging workloads (dialogs, groups, channels, folders, contacts).
+- **Socket.IO gateways**: dedicated gateways per domain (users, chats, messages, folders, calls) instead of one "god" gateway for better isolation and evolvability.
+- **AsyncAPI contract**: the WebSocket/Socket.IO API is documented in `asyncapi.yaml`, which makes event flows discoverable for frontend and external clients.
+- **Cloudinary integration**: offloads storage and processing of images/video/audio, keeping the backend focused on business logic.
+
+## System Overview
+
+- **Frontend**: Next.js 15 (see `../front`) — modern React UI with App Router.
+- **Backend**: NestJS API + Socket.IO gateways (this service).
+- **Realtime**: Socket.IO for messaging, presence, folders, and signaling for calls/live rooms.
+- **Database**: PostgreSQL with Prisma as the data access layer.
+- **Media**: Cloudinary for asset storage, transformation and delivery.
+- **Auth**: cookie‑friendly JWT auth (access/refresh) with CORS configuration via `FRONTEND_URL`.
+
+## For Recruiters
+
+- **Best places to quickly review the backend codebase**:
+  - `src/auth` — authentication flow, guards, and JWT strategy.
+  - `src/chat` — chat entities, queries, and WebSocket gateway.
+  - `src/message` — message lifecycle, media handling, reactions, and read state.
+  - `src/call` — WebRTC signaling for 1:1 calls and live rooms.
+  - `prisma/schema.prisma` — full data model for users, chats, messages, folders, etc.
+  - `asyncapi.yaml` — Socket.IO/WebSocket contract for all real‑time events.
+
 ## License and Attribution
 
 This repository is for educational purposes only. It is not affiliated with Telegram and is not intended for commercial use. Design and functionality are inspired by the Telegram application.
@@ -116,6 +155,10 @@ This repository is for educational purposes only. It is not affiliated with Tele
 ---
 
 ## Русский
+
+Русский | [English выше](#overview)
+
+Ищете веб‑клиент? Посмотрите [DistaHilar Frontend](../front/README.md).
 
 ### Описание
 
@@ -207,3 +250,42 @@ npm run start:dev
 ### Лицензия и атрибуция
 
 Репозиторий предназначен только для обучения и не связан с Telegram. Проект не является коммерческим. Дизайн и функционал вдохновлены приложением Telegram.
+
+### Зачем этот проект
+
+DistaHilar создан как портфолио‑проект, чтобы показать мой подход к **разработке backend’а, близкого к продакшену**, для сложного realtime‑мессенджера: от HTTP‑ и WebSocket‑API до моделирования данных, производительности и интеграций с внешними сервисами.
+
+### Моя роль
+
+- Соло‑разработчик backend’а: архитектура, модули, схема БД и realtime‑общение.
+- Фокус:
+  - Чётко разделённые домены NestJS (`auth`, `user`, `chat`, `message`, `folder`, `contact`, `call`, `community`).
+  - Обновления в реальном времени и presence через Socket.IO‑шлюзы.
+  - Надёжный сигналинг WebRTC, загрузка медиа и интеграция с Cloudinary.
+
+### Ключевые технические решения
+
+- **Модульная архитектура NestJS**: разделение по доменам вместо «монолитного» модуля, чтобы упростить поддержку и развитие.
+- **Prisma ORM**: явная схема данных, оптимизированная под нагрузку мессенджера (диалоги, группы, каналы, папки, контакты).
+- **Socket.IO‑шлюзы по доменам**: отдельные gateway’и для пользователей, чатов, сообщений, папок и звонков вместо одного «всего и сразу».
+- **AsyncAPI‑контракт**: файл `asyncapi.yaml` описывает весь WebSocket‑интерфейс и облегчает интеграцию фронтенда и сторонних клиентов.
+- **Cloudinary**: вынесение хранения и обработки медиа за пределы backend’а, чтобы он концентрировался на бизнес‑логике.
+
+### Обзор системы
+
+- **Frontend**: Next.js 15 (см. `../front`) — современный React‑интерфейс с App Router.
+- **Backend**: этот NestJS‑сервис (HTTP + Socket.IO‑шлюзы).
+- **Realtime**: Socket.IO для сообщений, presence, папок и сигналинга звонков/«живых» комнат.
+- **База данных**: PostgreSQL с Prisma в качестве слоя доступа к данным.
+- **Медиа**: Cloudinary для хранения и трансформации изображений/видео/аудио.
+- **Авторизация**: JWT (access/refresh) с поддержкой cookie и CORS через `FRONTEND_URL`.
+
+### Для рекрутеров
+
+- **Куда быстро заглянуть в коде backend’а**:
+  - `src/auth` — аутентификация, guard’ы, JWT‑стратегия.
+  - `src/chat` — чаты, запросы и WebSocket‑шлюз.
+  - `src/message` — жизненный цикл сообщений, медиа, реакции, статус прочтения.
+  - `src/call` — сигналинг WebRTC для 1:1 звонков и live‑комнат.
+  - `prisma/schema.prisma` — полная схема данных (пользователи, чаты, сообщения, папки и т.д.).
+  - `asyncapi.yaml` — контракт Socket.IO/WebSocket для всех realtime‑событий.
